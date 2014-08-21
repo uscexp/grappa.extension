@@ -55,7 +55,7 @@ public class AstInterpreter<V> {
 		try {
 			ProcessStore.getInstance(id);
 
-			getAnnotations(parserClass);
+			getAnnotations(parserClass, classMap, annotationMap);
 
 			root = createAstTreeNode(parsingResult.parseTreeRoot, parsingResult.inputBuffer);
 			
@@ -70,7 +70,7 @@ public class AstInterpreter<V> {
 		ProcessStore.removeInstance(id);
 	}
 
-	private void getAnnotations(Class<?> parserClass) {
+	public static void getAnnotations(Class<?> parserClass, Map<String, Class<?>> classMap, Map<String, Object> annotationMap) {
 		Method[] declaredMethods = parserClass.getDeclaredMethods();
 		for (int i = 0; i < declaredMethods.length; i++) {
 			AstValue astValue = declaredMethods[i].getAnnotation(AstValue.class);
@@ -93,7 +93,7 @@ public class AstInterpreter<V> {
 		}
 	}
 	
-	protected Class<?> findImplementationClass(Class<?> clazz, String methodName) {
+	protected static Class<?> findImplementationClass(Class<?> clazz, String methodName) {
 		Class<?> result = null;
 		
 		Method[] methods = findMethods(clazz, methodName);
@@ -111,7 +111,7 @@ public class AstInterpreter<V> {
 		return result;
 	}
 	
-	protected Method[] findMethods(Class<?> clazz, String methodName) {
+	protected static Method[] findMethods(Class<?> clazz, String methodName) {
 		List<Method> methods = new ArrayList<>();
 		
 		Method[] declaredMethods = clazz.getDeclaredMethods();
@@ -139,15 +139,7 @@ public class AstInterpreter<V> {
 				result = new AstValueTreeNode<>(node, value, valueType, factoryClass, factoryMethod);
 			} else if (annotation instanceof AstCommand) {
 				AstCommand astCommand = (AstCommand) annotation;
-				String classname = astCommand.classname();
-				if (classname.equals("")) {
-					String label = node.getLabel();
-					label = label.substring(0, 1).toUpperCase() + label.substring(1);
-					String methodName = AST_COMMAND_TREENODE_PREFIX + label + AST_COMMAND_TREENODE_SUFFIX;
-					Class<?> clazz = classMap.get(node.getLabel()); 
-					Package astTreeNodePackage = clazz.getPackage();
-					classname = astTreeNodePackage.getName() + "." + methodName;
-				}
+				String classname = getClassname(node.getLabel(), astCommand, classMap);
 				@SuppressWarnings("unchecked")
 				Class<AstTreeNode<V>> commandClass = (Class<AstTreeNode<V>>) Class.forName(classname);
 				Constructor<AstTreeNode<V>> constructor = commandClass.getDeclaredConstructor(Node.class, String.class);
@@ -163,6 +155,18 @@ public class AstInterpreter<V> {
 			}
 		}
 		return result;
+	}
+
+	public static String getClassname(String method, AstCommand astCommand, Map<String, Class<?>> classMap) {
+		String classname = astCommand.classname();
+		if (classname.equals("")) {
+			String label = method.substring(0, 1).toUpperCase() + method.substring(1);
+			String methodName = AST_COMMAND_TREENODE_PREFIX + label + AST_COMMAND_TREENODE_SUFFIX;
+			Class<?> clazz = classMap.get(method); 
+			Package astTreeNodePackage = clazz.getPackage();
+			classname = astTreeNodePackage.getName() + "." + methodName;
+		}
+		return classname;
 	}
 
 }
