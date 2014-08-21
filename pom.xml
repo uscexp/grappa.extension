@@ -4,7 +4,7 @@
 
 	<groupId>com.github.uscexp</groupId>
 	<artifactId>grappa.extension</artifactId>
-	<version>0.2.0-Beta</version>
+	<version>0.3.0-Snapshot</version>
 	<packaging>jar</packaging>
 
 	<name>${project.groupId}:${project.artifactId}</name>
