@@ -39,12 +39,15 @@
 <h2>
 <a name="news" class="anchor" href="#news"><span class="octicon octicon-link"></span></a>News</h2>
 
+<p>21.Aug.2014: New release <a href="https://github.com/uscexp/grappa.extension/releases/tag/v0.2.0-Beta">v0.2.0-Beta</a> which adds an AST commands java source code generator.</p>
+
 <p>15.Aug.2014: First release <a href="https://github.com/uscexp/grappa.extension/releases/tag/v0.1.0-Beta">v0.1.0-Beta</a> which adds the AST interpreter.</p>
 
 <h2>
 <a name="features" class="anchor" href="#features"><span class="octicon octicon-link"></span></a>Features</h2>
 
 <ul>
+<li>AST java source code generator for the AST command tree node classes.</li>
 <li>AST interpreter creates an AST (Abstract Syntax Tree) structure.</li>
 <li>The interpreter iterates over the AST structure and executes the implemented logic.</li>
 </ul><h2>
@@ -55,6 +58,8 @@ First it creates an AST (Abstract Syntax Tree) based on the <a href="https://git
 the annotated parser methods, annotated with <code>@AstValue</code> or <code>@AstCommand</code>.
 <code>@AstValue</code> writes the parse node value to the interpreter stack. By default the interpreter stores the values as in the parser defined type, if one wants to change that, one has to define the corresponding parameters of the <code>@AstValue</code> annotation.
 <code>@AstCommand</code> must be implemented from a developer, which has to create the <code>Ast&lt;Name&gt;TreeNode</code> and implement it. This represents the logic of your language commands. The <code>AstCommandTreeNode</code> classes by default are located in the same package as the parser implementation and have the naming convetion of Ast + name of your parser rule (first char upper case) + TreeNode and must extend <code>AstCommandTreeNode</code>. If one want to change that, one has to define the corresponding parameters of the <code>@AstCommand</code> annotation.</p>
+
+<p>The <code>AstModelGenerator</code> creates the model classes from a <a href="https://github.com/parboiled1/grappa">grappa</a> <code>BaseParser</code> extended and annotated parser class. It creates the corresponding java source files for the <code>@AstCommand</code> annotated rules in the parser class. The generated classes will extend <code>AstCommandTreeNode</code> and the to be implemented method <code>interpret</code>.</p>
 
 <h2>
 <a name="example" class="anchor" href="#example"><span class="octicon octicon-link"></span></a>Example</h2>
@@ -78,6 +83,9 @@ the annotated parser methods, annotated with <code>@AstValue</code> or <code>@As
 <p>First it creates an instance of <code>CalculatorParser</code> with the grappa factory method. Then one need a <code>ParseRunner</code> and run it with the input string. This gives us the <code>ParsingResult</code> which we need for the parse tree root. Up to now we have only treated with the <a href="https://github.com/sirthias/parboiled">parboiled</a>/<a href="https://github.com/parboiled1/grappa">grappa</a> parser.
 Now to the point. We create an <code>AstInterpreter</code> and call the <code>execute</code> method with the parameters calculation parser class, parsing result and an id. This will create the AST structure and interpret it.
 Finally clean up the interpreter (remove process store like stack ...).</p>
+
+<p>For the java source code model generation use: <code>java -cp &lt;dependencies&gt; com.github.uscexp.grappa.extension.codegenerator.AstModelGenerator pasrserClass sourceOutputPath</code>.
+e.g. <code>java -cp grappa.jar;asm-debug-all.jar;guava.jar;codemodel.jar;grappa.extension.jar;MyParserLib.jar; com.github.uscexp.grappa.extension.codegenerator.AstModelGenerator com.github.uscexp.grappa.parcer.CalculatorParser src/main/java</code></p>
 
 <h2>
 <a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h2>
