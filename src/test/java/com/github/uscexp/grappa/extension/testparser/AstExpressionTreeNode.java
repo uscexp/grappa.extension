@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2014 by haui - all rights reserved
  */
-package com.github.uscexp.grappa.extension.parser;
+package com.github.uscexp.grappa.extension.testparser;
 
 import java.util.Stack;
 
