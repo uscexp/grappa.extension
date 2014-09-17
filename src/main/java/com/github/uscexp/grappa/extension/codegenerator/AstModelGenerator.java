@@ -150,6 +150,7 @@ public class AstModelGenerator {
 				} else {
 					JType type = codeModel._ref(method.getReturnType());
 					jMethod = definedClass.method(modifier, type, method.getName());
+					jMethod.annotate(Override.class);
 				}
 
 				// throws declarations
@@ -201,7 +202,7 @@ public class AstModelGenerator {
 
 			String sourceOutputPath = args[1];
 			astModelGenerator.generateAstModel(args[0], sourceOutputPath);
-		} catch (ReflectiveOperationException | IOException e) {
+		} catch (Exception e) {
 			logger.log(Level.SEVERE, "Unexpected error occured", e);
 
 			logger.log(Level.SEVERE,

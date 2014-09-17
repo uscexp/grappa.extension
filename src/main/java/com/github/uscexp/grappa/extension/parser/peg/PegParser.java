@@ -26,12 +26,17 @@ public class PegParser extends BaseParser<String> {
 	}
 
 	public Rule expression() {
-		return sequence(sequence(), zeroOrMore(OR(), sequence()));
+		return sequence(sequence(), zerooOrMore());
 	}
 
 	@AstCommand
 	public Rule sequence() {
 		return oneOrMore(prefix());
+	}
+
+	@AstCommand
+	public Rule zerooOrMore() {
+		return zeroOrMore(sequence(OR(), sequence()));
 	}
 
 	public Rule prefix() {
@@ -43,9 +48,10 @@ public class PegParser extends BaseParser<String> {
 	}
 
 	public Rule primary() {
-		return firstOf(sequence(name(), testNot(arrow())), groupExpr(), literal(), classs(), ANY());
+		return firstOf(sequence(name(), testNot(arrow())), groupExpr(), literal(), classs(), ANYY());
 	}
 
+	@AstCommand
 	public Rule name() {
 		return sequence(identifier(), S());
 	}
@@ -66,13 +72,15 @@ public class PegParser extends BaseParser<String> {
 		return sequence(OPEN(), expression(), CLOSE(), S());
 	}
 
+	@AstCommand
 	public Rule literal() {
 		return firstOf(sequence(quote(), zeroOrMore(sequence(testNot(quote()), character())), quote(), S()),
 				sequence(doubleQuote(), zeroOrMore(sequence(testNot(doubleQuote()), character())), doubleQuote(), S()));
 	}
 
+	@AstCommand
 	public Rule classs() {
-		return sequence(ch('['), zeroOrMore(sequence(testNot(ch(']')), charRange())), ch(']'), S());
+		return sequence(SQUAREOPEN(), zeroOrMore(sequence(testNot(SQUARECLOSE()), charRange())), SQUARECLOSE(), S());
 	}
 
 	@AstCommand
@@ -80,6 +88,7 @@ public class PegParser extends BaseParser<String> {
 		return firstOf(sequence(character(), ch('-'), character()), character());
 	}
 
+	@AstCommand
 	public Rule character() {
 		return
 			firstOf(sequence(backSlash(),
@@ -140,16 +149,28 @@ public class PegParser extends BaseParser<String> {
 		return sequence(ch('+'), S());
 	}
 
+	@AstCommand
 	public Rule OPEN() {
 		return sequence(ch('('), S());
 	}
 
+	@AstCommand
 	public Rule CLOSE() {
 		return sequence(ch(')'), S());
 	}
 
 	@AstCommand
-	public Rule ANY() {
+	public Rule SQUAREOPEN() {
+		return ch('[');
+	}
+
+	@AstCommand
+	public Rule SQUARECLOSE() {
+		return ch(']');
+	}
+
+	@AstCommand
+	public Rule ANYY() {
 		return sequence(ch('.'), S());
 	}
 

@@ -21,15 +21,19 @@ import com.github.uscexp.grappa.extension.interpreter.AstInterpreter;
 import com.github.uscexp.grappa.extension.interpreter.ProcessStore;
 import com.github.uscexp.grappa.extension.parser.peg.PegParser;
 import com.google.common.base.Preconditions;
+import com.sun.codemodel.JClassAlreadyExistsException;
 import com.sun.codemodel.JCodeModel;
+import com.sun.codemodel.JDefinedClass;
 
 /**
- * @author haui
- *
+ * @author  haui
  */
 public class PegParserGenerator {
 
+	public static final long CLOSE = "close".hashCode();
+	public static final long OPEN = "open".hashCode();
 	public static final String CODE_MODEL = "codeModel";
+	public static final String DEFINED_CLASS = "definedClass";
 	//      private static Logger logger = Logger.getLogger(PegParserGenerator.class.getName());
 
 	public void generateParser(String parserClassString, String sourceOutputPath, String pegInputPath, Charset encoding)
@@ -74,11 +78,22 @@ public class PegParserGenerator {
 		AstInterpreter<String> astInterpreter = new AstInterpreter<>();
 
 		Long id = new Date().getTime();
+		Long idOpen = id + OPEN;
+		Long idClose = id + CLOSE;
 		try {
 			ProcessStore<String> processStore = ProcessStore.getInstance(id);
+			ProcessStore.getInstance(idOpen);
+			ProcessStore.getInstance(idClose);
+			JDefinedClass definedClass = codeModel._class(parserClassString);
 			// set the result object
 			processStore.setNewVariable(CODE_MODEL, codeModel);
+			processStore.setNewVariable(DEFINED_CLASS, definedClass);
+			
 			astInterpreter.execute(parser.getClass(), parsingResult, id);
+			
+			codeModel.build(new File(sourceOutputPath));
+		} catch (JClassAlreadyExistsException | IOException e) {
+			throw new PegParserGeneratorException("PEG parser generator unexpected error", e);
 		} finally {
 			astInterpreter.cleanUp(id);
 		}

@@ -1,31 +1,30 @@
-
+/*
+ * Copyright (C) 2014 by haui - all rights reserved
+ */
 package com.github.uscexp.grappa.extension.parser.peg;
-
-import java.util.logging.Logger;
 
 import org.parboiled.Node;
 
-import com.github.uscexp.grappa.extension.nodes.AstCommandTreeNode;
-
-
 /**
  * Command implementation for the <code>PegParser</code> rule: OR.
- * 
  */
-public class AstORTreeNode<V >
-    extends AstCommandTreeNode<V>
-{
+public class AstORTreeNode<V> extends AstPegBaseTreeNode<V> {
 
-	private static Logger logger = Logger.getLogger(AstORTreeNode.class.getName());
+	public static final String FIRST_OF = "firstOf";
 
-    public AstORTreeNode(Node<?> arg0, String arg1) {
-        super(arg0, arg1);
-    }
+	public AstORTreeNode(Node<?> node, String value) {
+		super(node, value);
+	}
 
-    protected void interpret(Long arg0)
-        throws ReflectiveOperationException
-    {
-        logger.info("create firstOf()");
-    }
+	@Override
+	protected void interpret(Long id)
+		throws ReflectiveOperationException {
+		super.interpret(id);
+		
+		if(openProcessStore.getStack().isEmpty() || !FIRST_OF.equals(openProcessStore.getStack().peek())) {
+			openProcessStore.getStack().push(FIRST_OF);
+		}
+		closeProcessStore.getStack().push(AstSequenceTreeNode.START_SEQUENCE);
+	}
 
 }

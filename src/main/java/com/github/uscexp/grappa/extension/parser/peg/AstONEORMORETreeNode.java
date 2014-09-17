@@ -1,31 +1,28 @@
-
+/*
+ * Copyright (C) 2014 by haui - all rights reserved
+ */
 package com.github.uscexp.grappa.extension.parser.peg;
-
-import java.util.logging.Logger;
 
 import org.parboiled.Node;
 
-import com.github.uscexp.grappa.extension.nodes.AstCommandTreeNode;
-
-
 /**
  * Command implementation for the <code>PegParser</code> rule: ONEORMORE.
- * 
  */
-public class AstONEORMORETreeNode<V >
-    extends AstCommandTreeNode<V>
-{
+public class AstONEORMORETreeNode<V> extends AstPegBaseTreeNode<V> {
 
-	private static Logger logger = Logger.getLogger(AstONEORMORETreeNode.class.getName());
+	public static final String ONE_OR_MORE = "oneOrMore";
+	public static final String START_ONE_OR_MORE = "#oneOrMore#";
 
-    public AstONEORMORETreeNode(Node<?> arg0, String arg1) {
-        super(arg0, arg1);
-    }
+	public AstONEORMORETreeNode(Node<?> node, String value) {
+		super(node, value);
+	}
 
-    protected void interpret(Long arg0)
-        throws ReflectiveOperationException
-    {
-        logger.info("create oneOrMore()");
-    }
+	@Override
+	protected void interpret(Long id)
+		throws ReflectiveOperationException {
+		super.interpret(id);
+		openProcessStore.getStack().push(ONE_OR_MORE);
+		closeProcessStore.getStack().push(START_ONE_OR_MORE);
+	}
 
 }

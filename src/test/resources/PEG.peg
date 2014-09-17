@@ -18,7 +18,7 @@ IdentStart <- [a-zA-Z_]
 GroupExpr <- OPEN Expression CLOSE S
 Literal <- Quote (!Quote Char)* Quote S
 / DoubleQuote (!DoubleQuote Char)* DoubleQuote S
-Class <- '[' (!']' CharRange)* ']' S
+Class <- SQUAREOPEN (!SQUARECLOSE CharRange)* SQUARECLOSE S
 CharRange <- Char '-' Char / Char
 Char <- BackSlash ( Quote
 / DoubleQuote
@@ -42,9 +42,11 @@ ZEROORMORE <- '*' S
 ONEORMORE <- '+' S
 OPEN <- '(' S
 CLOSE <- ')' S
+SQUAREOPEN <- '['
+SQUARECLOSE <- ']'
 ANY <- '.' S
 # Blanks
 EOL <- '\r\n' / '\n' / '\r'
-Comment <- "#" (!EOL .)* (EOL/EOI)
+Comment <- '#' (!EOL .)* (EOL/EOI)
 S <- (' ' / '\t' / EOL / Comment)*
 EOI <- !.
