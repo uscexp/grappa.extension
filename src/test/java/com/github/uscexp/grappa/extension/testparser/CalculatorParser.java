@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2014 by haui - all rights reserved
  */
-package com.github.uscexp.grappa.extension.parser;
+package com.github.uscexp.grappa.extension.testparser;
 
 import org.parboiled.BaseParser;
 import org.parboiled.Rule;
@@ -17,7 +17,7 @@ import com.github.uscexp.grappa.extension.annotations.AstValue;
 @BuildParseTree
 public class CalculatorParser extends BaseParser<Double> {
 
-	@AstCommand(classname = "com.github.uscexp.grappa.extension.parser.AstResultTreeNode")
+	@AstCommand(classname = "com.github.uscexp.grappa.extension.testparser.AstResultTreeNode")
 	public Rule inputLine() {
 		return sequence(expression(), EOI);
 	}
