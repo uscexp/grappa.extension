@@ -18,8 +18,8 @@ import org.parboiled.support.ParseTreeUtils;
 import org.parboiled.support.ParsingResult;
 
 import com.github.uscexp.grappa.extension.exception.AstInterpreterException;
-import com.github.uscexp.grappa.extension.parser.CalculatorParser;
-import com.github.uscexp.grappa.extension.parser.subclass.ExtendedCalculatorParser;
+import com.github.uscexp.grappa.extension.testparser.CalculatorParser;
+import com.github.uscexp.grappa.extension.testparser.subclass.ExtendedCalculatorParser;
 
 /**
  * @author haui

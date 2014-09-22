@@ -1,11 +1,11 @@
 /*
  * Copyright (C) 2014 by haui - all rights reserved
  */
-package com.github.uscexp.grappa.extension.parser.subclass;
+package com.github.uscexp.grappa.extension.testparser.subclass;
 
 import org.parboiled.Rule;
 
-import com.github.uscexp.grappa.extension.parser.CalculatorParser;
+import com.github.uscexp.grappa.extension.testparser.CalculatorParser;
 
 /**
  * @author haui

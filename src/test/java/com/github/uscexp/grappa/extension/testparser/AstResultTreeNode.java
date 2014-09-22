@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2014 by haui - all rights reserved
  */
-package com.github.uscexp.grappa.extension.parser;
+package com.github.uscexp.grappa.extension.testparser;
 
 import java.util.Stack;
 
@@ -14,19 +14,17 @@ import com.github.uscexp.grappa.extension.nodes.AstCommandTreeNode;
  * @author haui
  *
  */
-public class AstSquareRootTreeNode extends AstCommandTreeNode<Double> {
+public class AstResultTreeNode extends AstCommandTreeNode<Double> {
 
-	public AstSquareRootTreeNode(Node<?> node, String value) {
+	public AstResultTreeNode(Node<?> node, String value) {
 		super(node, value);
 	}
 
 	@Override
 	protected void interpret(Long id) throws ReflectiveOperationException {
 		Stack<Object> stack = ProcessStore.getInstance(id).getStack();
-		Double left = (Double) StackAccessUtil.pop(stack, Double.class);
-		double result = 0;
-		result = Math.sqrt(left);
-		stack.push(result);
+		Double result = (Double) StackAccessUtil.peek(stack, Double.class);
+		System.out.println(result);
 	}
 
 }
