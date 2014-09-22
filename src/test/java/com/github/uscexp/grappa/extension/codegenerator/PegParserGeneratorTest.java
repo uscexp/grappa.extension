@@ -73,9 +73,11 @@ public class PegParserGeneratorTest {
 		fileManager.close();
 
 		// Load and instantiate compiled class.
-		Class<? extends BaseParser<?>> cls = (Class<? extends BaseParser<?>>) Class.forName(TEST_PARSER_CLASS, true, classLoader);
+		@SuppressWarnings("unchecked")
+		Class<? extends BaseParser<String>> cls = (Class<? extends BaseParser<String>>) Class.forName(TEST_PARSER_CLASS, true, classLoader);
 		
-		BaseParser<?> parser = Parboiled.createParser(cls);
+		@SuppressWarnings("rawtypes")
+		BaseParser parser = Parboiled.createParser(cls);
 
 		Method method = parser.getClass().getDeclaredMethod("grammar", (Class<?>[]) null);
 
