@@ -24,7 +24,10 @@ public class AstNameTreeNode<V> extends AstPegBaseTreeNode<V> {
 			if(idx != -1) {
 				realValue = value.substring(0, idx);
 			}
-			realValue = realValue.trim() + "()";
+			realValue = getMethodName(realValue.trim());
+			if(!checkExistence(realValue)) {
+				realValue += "()";
+			}
 			
 			realValue = checkPostponedAction(realValue);
 			

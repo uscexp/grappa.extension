@@ -21,6 +21,8 @@ public class AstCharRangeTreeNode<V> extends AstPegBaseTreeNode<V> {
 		String rangeStart = (String) closeProcessStore.getStack().pop();
 		String rangeEnd = (String) closeProcessStore.getStack().peek();
 		if(rangeEnd.startsWith("ch('") && value.length() > 1) {
+			rangeStart = rangeStart.substring(3, rangeStart.length()-1);
+			rangeEnd = rangeEnd.substring(3, rangeEnd.length()-1);
 			closeProcessStore.getStack().pop();
 			closeProcessStore.getStack().push("charRange(" + rangeStart + ", " + rangeEnd + ")");
 		} else {

@@ -29,9 +29,9 @@ Char <- BackSlash ( Quote
 / [0-7][0-7]?)
 / !BackSlash .
 BackSlash <- '\\'
-Ouote <- '\''
+Quote <- '\''
 DoubleQuote <- '\"'
-BackQuote <- '\`'
+BackQuote <- '`'
 # Terminals
 Arrow <- "<-" S
 OR <- '/' S

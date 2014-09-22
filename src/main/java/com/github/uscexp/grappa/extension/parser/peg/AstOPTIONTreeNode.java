@@ -10,8 +10,8 @@ import org.parboiled.Node;
  */
 public class AstOPTIONTreeNode<V> extends AstPegBaseTreeNode<V> {
 
-	public static final String OPTION = "option";
-	public static final String START_OPTION = "#option#";
+	public static final String OPTION = "optional";
+	public static final String START_OPTION = "#optional#";
 
 	public AstOPTIONTreeNode(Node<?> node, String value) {
 		super(node, value);

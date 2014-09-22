@@ -32,46 +32,52 @@ public class AstDefinitionTreeNode<V> extends AstPegBaseTreeNode<V> {
 		if ((value != null) && !value.isEmpty()) {
 			StringTokenizer st = new StringTokenizer(value, " \t\n\r", false);
 			if (st.hasMoreTokens()) {
-				String methodName = st.nextToken();
-
-				JMethod method = definedClass.method(JMod.PUBLIC, Rule.class, methodName);
-				JBlock body = method.body();
-				String rule = "";
-				int open = 0;
-				while (!openProcessStore.getStack().isEmpty()) {
-					rule += (String) openProcessStore.getStack().pop() + "(";
-					++open;
-				}
+				String methodName = getMethodName(st.nextToken());
 				
-				if(!closeProcessStore.getStack().isEmpty()) {
-					String currentRule = (String) closeProcessStore.getStack().pop();
-					if(!AstSequenceTreeNode.isStartSequence(currentRule) && !(currentRule.startsWith("#") && currentRule.endsWith("#"))) {
-						if ((currentRule + "(").startsWith(methodName)) {
-							currentRule = (String) closeProcessStore.getStack().pop();
-							rule += currentRule;
+				if(checkExistence(methodName)) {
+					openProcessStore.getStack().clear();
+					closeProcessStore.getStack().clear();
+				} else {
+
+					JMethod method = definedClass.method(JMod.PUBLIC, Rule.class, methodName);
+					JBlock body = method.body();
+					String rule = "";
+					int open = 0;
+					while (!openProcessStore.getStack().isEmpty()) {
+						rule += (String) openProcessStore.getStack().pop() + "(";
+						++open;
+					}
+					
+					if(!closeProcessStore.getStack().isEmpty()) {
+						String currentRule = (String) closeProcessStore.getStack().pop();
+						if(!AstSequenceTreeNode.isStartSequence(currentRule) && !(currentRule.startsWith("#") && currentRule.endsWith("#"))) {
+							if ((currentRule + "(").startsWith(methodName)) {
+								currentRule = (String) closeProcessStore.getStack().pop();
+								rule += currentRule;
+							}
 						}
 					}
-				}
-				
-				while (!closeProcessStore.getStack().isEmpty()) {
-					String value = (String) closeProcessStore.getStack().pop();
-					if(AstSequenceTreeNode.isStartSequence(value)) {
-						break;
+					
+					while (!closeProcessStore.getStack().isEmpty()) {
+						String value = (String) closeProcessStore.getStack().pop();
+						if(AstSequenceTreeNode.isStartSequence(value)) {
+							break;
+						}
+						if(!rule.endsWith("(")) {
+							rule += ", ";
+						}
+						rule += value;
 					}
-					if(!rule.endsWith("(")) {
-						rule += ", ";
+					
+					for (int i = 0; i < open; i++) {
+						rule += ")";
 					}
-					rule += value;
+					
+					String bodySource = "return " + rule + ";";
+					body.directStatement(bodySource);
+	
+					logger.info(String.format("add method: %s, with body: %s", methodName, bodySource));
 				}
-				
-				for (int i = 0; i < open; i++) {
-					rule += ")";
-				}
-				
-				String bodySource = "return " + rule + ";";
-				body.directStatement(bodySource);
-
-				logger.info(String.format("add method: %s, with body: %s", methodName, bodySource));
 			}
 		}
 	}
