@@ -35,7 +35,7 @@ import com.github.uscexp.grappa.extension.exception.PegParserGeneratorException;
 import com.github.uscexp.grappa.extension.parser.peg.PegParser;
 
 /**
- * @author  haui
+ * @author haui
  */
 public class PegParserGeneratorTest {
 
@@ -47,14 +47,13 @@ public class PegParserGeneratorTest {
 	private PegParserGenerator pegParserGeneratorSUT = new PegParserGenerator();
 
 	@Test
-	public void testGenerateParserStringStringStringCharset()
-		throws Exception {
+	public void testGenerateParserFromStringFromFileStringStringStringCharset() throws Exception {
 		File rootFile = new File(SOURCE_OUTPUT_PATH);
 		URL url = this.getClass().getClassLoader().getResource(PEG_INPUT_PATH);
 		URLClassLoader classLoader = URLClassLoader.newInstance(new URL[] { rootFile.toURI().toURL() }, getClass().getClassLoader());
 		Thread.currentThread().setContextClassLoader(classLoader);
 
-		pegParserGeneratorSUT.generateParser(TEST_PARSER_CLASS, TEST_GENERIC_TYPE_CLASS, SOURCE_OUTPUT_PATH, url.getFile(), null);
+		pegParserGeneratorSUT.generateParserFromFile(TEST_PARSER_CLASS, TEST_GENERIC_TYPE_CLASS, SOURCE_OUTPUT_PATH, url.getFile(), null);
 
 		String pathname = SOURCE_OUTPUT_PATH + "/" + TEST_PARSER_CLASS.replace('.', '/');
 		File file = new File(pathname + ".java");
@@ -75,7 +74,7 @@ public class PegParserGeneratorTest {
 		// Load and instantiate compiled class.
 		@SuppressWarnings("unchecked")
 		Class<? extends BaseParser<String>> cls = (Class<? extends BaseParser<String>>) Class.forName(TEST_PARSER_CLASS, true, classLoader);
-		
+
 		@SuppressWarnings("rawtypes")
 		BaseParser parser = Parboiled.createParser(cls);
 
@@ -95,19 +94,17 @@ public class PegParserGeneratorTest {
 		ParsingResult<PegParser> parsingResult = recoveringParseRunner.run(input);
 
 		if (parsingResult.hasErrors()) {
-			throw new PegParserGeneratorException(String.format("PEG definition parse error(s): %s",
-					ErrorUtils.printParseErrors(parsingResult)));
+			throw new PegParserGeneratorException(String.format("PEG definition parse error(s): %s", ErrorUtils.printParseErrors(parsingResult)));
 		}
 		assertFalse(parsingResult.hasErrors());
-		
+
 		// clean up
 		file.delete();
 		file = new File(pathname + ".class");
 		file.delete();
-		
+
 		int idx = -1;
-		
-		
+
 		while ((idx = pathname.lastIndexOf('/')) != -1) {
 			pathname = pathname.substring(0, idx);
 			file = new File(pathname);
@@ -116,14 +113,12 @@ public class PegParserGeneratorTest {
 	}
 
 	@Test(expected = PegParserGeneratorException.class)
-	public void testGenerateParserFileInputError()
-		throws Exception {
-		pegParserGeneratorSUT.generateParser(TEST_PARSER_CLASS, TEST_GENERIC_TYPE_CLASS, SOURCE_OUTPUT_PATH, "nonexistent", null);
+	public void testGenerateParserFromStringFromFileFileInputError() throws Exception {
+		pegParserGeneratorSUT.generateParserFromFile(TEST_PARSER_CLASS, TEST_GENERIC_TYPE_CLASS, SOURCE_OUTPUT_PATH, "nonexistent", null);
 	}
 
 	@Test(expected = PegParserGeneratorException.class)
-	public void testGenerateParserInputError()
-		throws Exception {
-		pegParserGeneratorSUT.generateParser(TEST_PARSER_CLASS, TEST_GENERIC_TYPE_CLASS, SOURCE_OUTPUT_PATH, "a - bc");
+	public void testGenerateParserFromStringFromFileInputError() throws Exception {
+		pegParserGeneratorSUT.generateParserFromString(TEST_PARSER_CLASS, TEST_GENERIC_TYPE_CLASS, SOURCE_OUTPUT_PATH, "a - bc");
 	}
 }

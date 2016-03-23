@@ -16,12 +16,16 @@ import com.github.uscexp.grappa.extension.nodes.AstCommandTreeNode;
  */
 public class AstSquareRootTreeNode extends AstCommandTreeNode<Double> {
 
+	@Override
+	protected void interpretBeforeChilds(Long id) throws Exception {
+	}
+
 	public AstSquareRootTreeNode(Node<?> node, String value) {
 		super(node, value);
 	}
 
 	@Override
-	protected void interpret(Long id) throws ReflectiveOperationException {
+	protected void interpretAfterChilds(Long id) throws Exception {
 		Stack<Object> stack = ProcessStore.getInstance(id).getStack();
 		Double left = (Double) StackAccessUtil.pop(stack, Double.class);
 		double result = 0;

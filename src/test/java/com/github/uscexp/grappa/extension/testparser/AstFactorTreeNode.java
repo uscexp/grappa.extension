@@ -21,7 +21,11 @@ public class AstFactorTreeNode extends AstCommandTreeNode<Double> {
 	}
 
 	@Override
-	protected void interpret(Long id) throws ReflectiveOperationException {
+	protected void interpretBeforeChilds(Long id) throws Exception {
+	}
+
+	@Override
+	protected void interpretAfterChilds(Long id) throws Exception {
 		if(value.indexOf('^') > -1) {
 			Stack<Object> stack = ProcessStore.getInstance(id).getStack();
 			Double right = (Double) StackAccessUtil.pop(stack, Double.class);

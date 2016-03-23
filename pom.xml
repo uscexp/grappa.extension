@@ -123,7 +123,7 @@
 				<configuration>
 					<argLine>-Xmx512m</argLine>
 					<skip>false</skip>
-					<testFailureIgnore>true</testFailureIgnore>
+					<testFailureIgnore>false</testFailureIgnore>
 					<excludes>
 						<exclude>**/Abstract*.java</exclude>
 						<exclude>**/AllTests.java</exclude>

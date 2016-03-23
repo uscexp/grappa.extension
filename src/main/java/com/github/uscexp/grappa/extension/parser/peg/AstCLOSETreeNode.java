@@ -9,7 +9,6 @@ import org.parboiled.Node;
  * Command implementation for the <code>PegParser</code> rule: CLOSE.
  */
 public class AstCLOSETreeNode<V> extends AstPegBaseTreeNode<V> {
-
 	public static final String CLOSE = ")";
 
 	public AstCLOSETreeNode(Node<?> node, String value) {
@@ -17,11 +16,15 @@ public class AstCLOSETreeNode<V> extends AstPegBaseTreeNode<V> {
 	}
 
 	@Override
-	protected void interpret(Long id)
-		throws ReflectiveOperationException {
-		super.interpret(id);
-		closeProcessStore.getStack().push(CLOSE);
-		openProcessStore.getStack().push(CLOSE);
-	}
+	protected void interpretAfterChilds(Long id) throws ReflectiveOperationException {
+		super.interpretAfterChilds(id);
 
+		this.processStore.tierOneUp(true);
+		this.openProcessStore.tierOneUp(true);
+
+		this.processStore.tierOneUp(true);
+		this.openProcessStore.tierOneUp(true);
+
+		lastTreeNode = this;
+	}
 }

@@ -3,27 +3,28 @@
  */
 package com.github.uscexp.grappa.extension.parser.peg;
 
+import java.util.Stack;
+
 import org.parboiled.Node;
 
 /**
  * Command implementation for the <code>PegParser</code> rule: classs.
  */
 public class AstClasssTreeNode<V> extends AstPegBaseTreeNode<V> {
-
 	public AstClasssTreeNode(Node<?> node, String value) {
 		super(node, value);
 	}
 
 	@Override
-	protected void interpret(Long id)
-		throws ReflectiveOperationException {
-		super.interpret(id);
+	protected void interpretAfterChilds(Long id) throws ReflectiveOperationException {
+		super.interpretAfterChilds(id);
+		Stack<Object> stack = this.processStore.getTierStack();
+		String body = (String) stack.pop();
 
-		String body = (String) closeProcessStore.getStack().pop();
-		
 		body = checkPostponedAction(body);
 
-		closeProcessStore.getStack().push(body);
-	}
+		stack.push(body);
 
+		lastTreeNode = this;
+	}
 }

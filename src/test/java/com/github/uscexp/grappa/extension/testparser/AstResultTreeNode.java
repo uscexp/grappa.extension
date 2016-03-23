@@ -21,7 +21,11 @@ public class AstResultTreeNode extends AstCommandTreeNode<Double> {
 	}
 
 	@Override
-	protected void interpret(Long id) throws ReflectiveOperationException {
+	protected void interpretBeforeChilds(Long id) throws Exception {
+	}
+
+	@Override
+	protected void interpretAfterChilds(Long id) throws Exception {
 		Stack<Object> stack = ProcessStore.getInstance(id).getStack();
 		Double result = (Double) StackAccessUtil.peek(stack, Double.class);
 		System.out.println(result);

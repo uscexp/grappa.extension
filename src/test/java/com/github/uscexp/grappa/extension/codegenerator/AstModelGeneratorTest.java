@@ -16,6 +16,7 @@ import org.parboiled.Parboiled;
 import com.github.uscexp.grappa.extension.annotations.AstCommand;
 import com.github.uscexp.grappa.extension.codegenerator.parser.GeneratorTestCalculatorParser;
 import com.github.uscexp.grappa.extension.interpreter.AstInterpreter;
+import com.github.uscexp.grappa.extension.interpreter.MethodNameToTreeNodeInfoMaps;
 
 public class AstModelGeneratorTest {
 
@@ -73,16 +74,14 @@ public class AstModelGeneratorTest {
 		String filename = GeneratorTestCalculatorParser.class.getPackage().getName().replace('.', '/');
 		filename = sourceOutputPath + "/" + filename;
 		BaseParser<?> parser = Parboiled.createParser(GeneratorTestCalculatorParser.class);
-		Map<String, Class<?>> classMap = new HashMap<>();
-		Map<String, Object> annotationMap = new HashMap<>();
-		AstInterpreter.getAnnotations(parser.getClass(), classMap, annotationMap);
+		MethodNameToTreeNodeInfoMaps methodNameToTreeNodeInfoMaps = AstInterpreter.findImplementationClassesAndAnnotationTypes(parser.getClass());
 		
-		Set<String> methodNames = classMap.keySet();
+		Set<String> methodNames = methodNameToTreeNodeInfoMaps.getMethodNames();
 		
 		file = null;
 		for (String methodName : methodNames) {
-			if(annotationMap.get(methodName) instanceof AstCommand) {
-				AstCommand astCommand = (AstCommand) annotationMap.get(methodName);
+			if(methodNameToTreeNodeInfoMaps.getAnnotationTypeForMethodName(methodName) instanceof AstCommand) {
+				AstCommand astCommand = (AstCommand) methodNameToTreeNodeInfoMaps.getAnnotationTypeForMethodName(methodName);
 				String label = methodName.substring(0, 1).toUpperCase() + methodName.substring(1);
 				String javaFilename = "Ast" + label + "TreeNode.java";
 				String classname = astCommand.classname();

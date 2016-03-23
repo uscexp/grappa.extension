@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2015 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.interpreter;
 
@@ -9,13 +9,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
-import com.github.uscexp.grappa.extension.nodes.AstTreeNode;
+import com.github.uscexp.grappa.extension.interpreter.type.MethodDeclaration;
+import com.github.uscexp.grappa.extension.interpreter.type.MethodSignature;
+import com.github.uscexp.grappa.extension.interpreter.type.Primitive;
 
 /**
  * VariableStore for a process.
- * 
- * @author haui
  *
+ * @author  haui
  */
 public final class ProcessStore<V> {
 
@@ -27,26 +28,25 @@ public final class ProcessStore<V> {
 
 	private short execState = OK_STATE;
 
+	private int tier = -1;
+
 	/** globale variables. */
 	private Map<Object, Object> global = new HashMap<>();
 
-	/**
-	 * store for method nodes.
-	 */
-	private Map<String, AstTreeNode<V>> methods = new HashMap<>();
+	/** store for method nodes. */
+	private Map<MethodSignature, MethodDeclaration> methods = new HashMap<>();
 
 	/** Stack for calculations. */
 	private Stack<Object> stack = new Stack<>();
 
-	/**
-	 * Block variable hierarchy:
-	 * stores variable Maps.
-	 */
+	/** Stack for several tiers. */
+	private List<Stack<Object>> tierStack = new ArrayList<>();
+
+	/** Block variable hierarchy: stores variable Maps. */
 	private List<Map<Object, Object>> working = new ArrayList<>();
 
 	/**
-	 * stores old block variable hierarchies for later retreval
-	 * e.g. returning from a method call<br>
+	 * stores old block variable hierarchies for later retreval e.g. returning from a method call<br>
 	 * stores Lists of 'working' variable Maps
 	 */
 	private List<List<Map<Object, Object>>> oldBlockHierarchy = new ArrayList<>();
@@ -95,20 +95,94 @@ public final class ProcessStore<V> {
 	}
 
 	/**
+	 * get current tierStack for this shell.
+	 *
+	 * @return  Stack
+	 */
+	public Stack<Object> getTierStack() {
+		if (tier < 0)
+			return null;
+		return tierStack.get(tier);
+	}
+
+	/**
+	 * get Stack of the next tier, if no exist get a new one.
+	 *
+	 * @return  Stack
+	 */
+	public Stack<Object> tierOneUp(boolean newStack) {
+		++tier;
+		Stack<Object> result;
+		if (tierStack.size() == tier) {
+			result = new Stack<>();
+			tierStack.add(result);
+		} else if (newStack) {
+			result = new Stack<>();
+			tierStack.add(tier, result);
+		} else {
+			result = getTierStack();
+		}
+		return result;
+	}
+
+	public Stack<Object> tierOneDown(boolean remove) {
+		Stack<Object> result = null;
+		if (remove) {
+			result = removeTierStack();
+		} else {
+			if (tier > 0)
+				--tier;
+			result = getTierStack();
+		}
+		return result;
+	}
+
+	/**
+	 * remove tierStack. Remove a tier.
+	 *
+	 * @return  Stack
+	 */
+	protected Stack<Object> removeTierStack() {
+		Stack<Object> result = tierStack.remove(tier);
+		--tier;
+		return result;
+	}
+
+	/**
 	 * get stack for this shell.
 	 *
-	 * @return Stack
+	 * @return  Stack
 	 */
 	public Stack<Object> getStack() {
 		return stack;
 	}
 
 	/**
-	 * get a variable, first from the highest block hierarchy down to the
-	 * global variables.
+	 * get a Primitive variable, first from the highest block hierarchy down to the global variables
 	 *
-	 * @param key name of the variable
-	 * @return value of the variable
+	 * @param  key  name of the variable
+	 * @return  value of the variable
+	 */
+	public Primitive getPrimitiveVariable(Object key) {
+		Primitive object = null;
+
+		for (int i = working.size() - 1; i >= 0; --i) {
+			Map<Object, Object> map = working.get(i);
+			object = (Primitive) map.get(key);
+			if (object != null)
+				break;
+		}
+		if (object == null)
+			object = (Primitive) global.get(key);
+
+		return object;
+	}
+
+	/**
+	 * get a variable, first from the highest block hierarchy down to the global variables.
+	 *
+	 * @param  key  name of the variable
+	 * @return  value of the variable
 	 */
 	public Object getVariable(Object key) {
 		Object object = null;
@@ -125,35 +199,34 @@ public final class ProcessStore<V> {
 		return object;
 	}
 
-//	/**
-//	 * get a Primitive variable, first from the highest block hierarchy down to the
-//	 * global variables.
-//	 *
-//	 * @param key name of the variable
-//	 * @return value of the variable
-//	 */
-//	public Primitive getPrimitiveVariable(Object key) {
-//		Primitive object = null;
-//
-//		for (int i = working.size() - 1; i >= 0; --i) {
-//			ExtHashMap map = (ExtHashMap) working.get(i);
-//			object = map.getPrimitive(key);
-//			if (object != null)
-//				break;
-//		}
-//		if (object == null)
-//			object = global.getPrimitive(key);
-//
-//		return object;
-//	}
+	//      /**
+	//       * get a Primitive variable, first from the highest block hierarchy down to the
+	//       * global variables.
+	//       *
+	//       * @param key name of the variable
+	//       * @return value of the variable
+	//       */
+	//      public Primitive getPrimitiveVariable(Object key) {
+	//              Primitive object = null;
+	//
+	//              for (int i = working.size() - 1; i >= 0; --i) {
+	//                      ExtHashMap map = (ExtHashMap) working.get(i);
+	//                      object = map.getPrimitive(key);
+	//                      if (object != null)
+	//                              break;
+	//              }
+	//              if (object == null)
+	//                      object = global.getPrimitive(key);
+	//
+	//              return object;
+	//      }
 
 	/**
-	 * set an already defined variable, first from the highest block hierarchy
-	 * down to the global variables.
+	 * set an already defined variable, first from the highest block hierarchy down to the global variables.
 	 *
-	 * @param key name of the variable
-	 * @param value value of the variable
-	 * @return true if successfully assignd to an existing variable else false
+	 * @param  key  name of the variable
+	 * @param  value  value of the variable
+	 * @return  true if successfully assignd to an existing variable else false
 	 */
 	public boolean setVariable(Object key, Object value) {
 		boolean success = false;
@@ -179,12 +252,11 @@ public final class ProcessStore<V> {
 	}
 
 	/**
-	 * set a new variable, on the highest block hierarchy or global
-	 * if no hierarchy exists.
+	 * set a new variable, on the highest block hierarchy or global if no hierarchy exists.
 	 *
-	 * @param key name of the variable
-	 * @param value value of the variable
-	 * @return true if at least one local block hierarchy exists else false
+	 * @param  key  name of the variable
+	 * @param  value  value of the variable
+	 * @return  true if at least one local block hierarchy exists else false
 	 */
 	public boolean setNewVariable(Object key, Object value) {
 		boolean success = false;
@@ -202,9 +274,9 @@ public final class ProcessStore<V> {
 	/**
 	 * set a new local variable, on the highest block hierarchy.
 	 *
-	 * @param key name of the variable
-	 * @param value value of the variable
-	 * @return true if at least one local block hierarchy exists else false
+	 * @param  key  name of the variable
+	 * @param  value  value of the variable
+	 * @return  true if at least one local block hierarchy exists else false
 	 */
 	public boolean setLocalVariable(Object key, Object value) {
 		boolean success = false;
@@ -220,8 +292,8 @@ public final class ProcessStore<V> {
 	/**
 	 * set a new global variable, on the global hierarchy.
 	 *
-	 * @param key name of the variable
-	 * @param value value of the variable
+	 * @param  key  name of the variable
+	 * @param  value  value of the variable
 	 */
 	public void setGlobalVariable(Object key, Object value) {
 		global.put(key, value);
@@ -237,7 +309,7 @@ public final class ProcessStore<V> {
 	/**
 	 * remove the last block hierarchy variable map.
 	 *
-	 * @return true if the last local block hierarchy could be removed else false
+	 * @return  true if the last local block hierarchy could be removed else false
 	 */
 	public boolean removeLastBlockVariableMap() {
 		boolean success = false;
@@ -257,8 +329,7 @@ public final class ProcessStore<V> {
 	}
 
 	/**
-	 * move current block hierarchy variable maps to the archive
-	 * for later retreval.
+	 * move current block hierarchy variable maps to the archive for later retreval.
 	 */
 	public void moveWorkingMapToArchive() {
 		oldBlockHierarchy.add(working);
@@ -267,10 +338,9 @@ public final class ProcessStore<V> {
 	}
 
 	/**
-	 * restore the last block hierarchy variable map from
-	 * archive to working.
+	 * restore the last block hierarchy variable map from archive to working.
 	 *
-	 * @return true if restored successfully else false
+	 * @return  true if restored successfully else false
 	 */
 	public boolean restoreLastMapFromArchive() {
 		boolean success = false;
@@ -286,46 +356,24 @@ public final class ProcessStore<V> {
 	}
 
 	/**
-	 * removes all block hierarchy variable maps from
-	 * archive.
+	 * removes all block hierarchy variable maps from archive.
 	 */
 	public void removeAllMapsFromArchive() {
 		oldBlockHierarchy.clear();
 	}
 
-	/**
-	 * add a method node hierarchy.
-	 *
-	 * @param name method id
-	 * @param method method node
-	 */
-	public void addMethod(String name, AstTreeNode<V> method) {
-		methods.put(name, method);
+	public void addMethod(MethodSignature methodSignature, MethodDeclaration method) {
+		methods.put(methodSignature, method);
 	}
 
-	/**
-	 * get a method node with a method id.
-	 *
-	 * @param name method id
-	 * @return method node
-	 */
-	public AstTreeNode<V> getMethod(String name) {
-		return methods.get(name);
+	public MethodDeclaration getMethod(MethodSignature methodSignature) {
+		return methods.get(methodSignature);
 	}
 
-	/**
-	 * remove a method node with a method id.
-	 *
-	 * @param name method id
-	 * @return removed method node
-	 */
-	public AstTreeNode<V> removeMethod(String name) {
-		return methods.remove(name);
+	public MethodDeclaration removeMethod(MethodSignature methodSignature) {
+		return methods.remove(methodSignature);
 	}
 
-	/**
-	 * clear all method nodes
-	 */
 	public void clearMethods() {
 		methods.clear();
 	}

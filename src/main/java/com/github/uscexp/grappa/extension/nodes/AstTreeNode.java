@@ -32,21 +32,29 @@ public abstract class AstTreeNode<V> extends MutableTreeNodeImpl<AstTreeNode<V>>
 		this.value = value;
 	}
 	
-	public void interpretIt(Long id) throws ReflectiveOperationException {
+	public void interpretIt(Long id) throws Exception {
 	    if( !ProcessStore.getInstance(id).checkPrecondition())
 	        return;
-		for (AstTreeNode<V> astTreeNode : getChildren()) {
-			astTreeNode.interpretIt(id);
-		}
-		interpret(id);
+		    interpretBeforeChilds(id);
+			for (AstTreeNode<V> astTreeNode : getChildren()) {
+				astTreeNode.interpretIt(id);
+			}
+			interpretAfterChilds(id);
 	}
-
+	
 	/**
-	 * Interpret method
+	 * Interpret before children method.
 	 *
 	 * @param id instance id
 	 */
-	protected abstract void interpret(Long id) throws ReflectiveOperationException;
+	protected abstract void interpretBeforeChilds(Long id) throws Exception;
+
+	/**
+	 * Interpret after children method.
+	 *
+	 * @param id instance id
+	 */
+	protected abstract void interpretAfterChilds(Long id) throws Exception;
 
 	@SuppressWarnings("unchecked")
 	protected <F> F convert(String value, Class<F> valueType, Class<?> factoryClass, String factoryMethod)
@@ -65,5 +73,12 @@ public abstract class AstTreeNode<V> extends MutableTreeNodeImpl<AstTreeNode<V>>
 			result = (F) value;
 		}
 		return result;
+	}
+
+	@Override
+	public String toString() {
+		String text = "[" + getClass().getSimpleName() + "].[" + parseNode.getLabel() + "] '" + value + "'";
+		text = text.replaceAll("(\\r|\\n|\\r\\n)+", "\\\\n");
+		return text;
 	}
 }

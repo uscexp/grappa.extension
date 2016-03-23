@@ -10,17 +10,17 @@ import org.parboiled.Node;
  * 
  */
 public class AstZerooOrMoreTreeNode<V> extends AstPegBaseTreeNode<V> {
-
 	public AstZerooOrMoreTreeNode(Node<?> node, String value) {
 		super(node, value);
 	}
 
 	@Override
-	protected void interpret(Long id) throws ReflectiveOperationException {
-		super.interpret(id);
-		if(value == null || value.isEmpty())
-			if(closeProcessStore.getStack().isEmpty() || !AstSequenceTreeNode.isStartSequence(((String)closeProcessStore.getStack().peek())))
-				closeProcessStore.getStack().push(AstSequenceTreeNode.START_SEQUENCE);
+	protected void interpretAfterChilds(Long id) throws ReflectiveOperationException {
+		super.interpretAfterChilds(id);
+		if ((!this.tearedUp) && (!AstCLOSETreeNode.class.isAssignableFrom(lastTreeNode.getClass())) && (!AstORTreeNode.class.isAssignableFrom(lastTreeNode.getClass()))) {
+			this.processStore.tierOneUp(true);
+			this.openProcessStore.tierOneUp(true);
+		}
+		lastTreeNode = this;
 	}
-
 }

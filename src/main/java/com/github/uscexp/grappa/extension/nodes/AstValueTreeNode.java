@@ -31,7 +31,11 @@ public class AstValueTreeNode<V> extends AstTreeNode<V> {
 	}
 
 	@Override
-	protected void interpret(Long id) throws ReflectiveOperationException {
+	protected void interpretBeforeChilds(Long id) throws Exception {
+	}
+
+	@Override
+	protected void interpretAfterChilds(Long id) throws Exception {
 		ProcessStore.getInstance(id).getStack().push(convert(value, valueType, factoryClass, factoryMethod));
 	}
 }

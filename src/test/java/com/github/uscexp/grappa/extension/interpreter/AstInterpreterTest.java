@@ -44,7 +44,7 @@ public class AstInterpreterTest {
 		
 		AstInterpreter<Double> interpreter = new AstInterpreter<>();
 		Long id = new Date().getTime();
-		interpreter.execute(calculatorParser.getClass(), parsingResult, id);
+		interpreter.interpretBackwardOrder(calculatorParser.getClass(), parsingResult, id);
 		Object result = ProcessStore.getInstance(id).getStack().peek();
 		
 		assertEquals(new Double(10), result);
@@ -69,7 +69,7 @@ public class AstInterpreterTest {
 		
 		AstInterpreter<Double> interpreter = new AstInterpreter<>();
 		Long id = new Date().getTime();
-		interpreter.execute(calculatorParser.getClass(), parsingResult, id);
+		interpreter.interpretBackwardOrder(calculatorParser.getClass(), parsingResult, id);
 		Object result = ProcessStore.getInstance(id).getStack().peek();
 		
 		assertEquals(new Double(2), result);
@@ -99,7 +99,7 @@ public class AstInterpreterTest {
 		
 		AstInterpreter<Double> interpreter = new AstInterpreter<>();
 		Long id = new Date().getTime();
-		interpreter.execute(calculatorParser.getClass(), parsingResult, id);
+		interpreter.interpretBackwardOrder(calculatorParser.getClass(), parsingResult, id);
 		interpreter.cleanUp(id);
 	}
 
@@ -120,7 +120,7 @@ public class AstInterpreterTest {
 		
 		AstInterpreter<Double> interpreter = new AstInterpreter<>();
 		Long id = new Date().getTime();
-		interpreter.execute(calculatorParser.getClass(), parsingResult, id);
+		interpreter.interpretBackwardOrder(calculatorParser.getClass(), parsingResult, id);
 		Object result = ProcessStore.getInstance(id).getStack().peek();
 		
 		assertEquals(new Double(10), result);

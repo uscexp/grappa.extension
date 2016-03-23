@@ -9,20 +9,17 @@ import org.parboiled.Node;
  * Command implementation for the <code>PegParser</code> rule: OPTION.
  */
 public class AstOPTIONTreeNode<V> extends AstPegBaseTreeNode<V> {
-
 	public static final String OPTION = "optional";
-	public static final String START_OPTION = "#optional#";
 
 	public AstOPTIONTreeNode(Node<?> node, String value) {
 		super(node, value);
 	}
 
 	@Override
-	protected void interpret(Long id)
-		throws ReflectiveOperationException {
-		super.interpret(id);
-		openProcessStore.getStack().push(OPTION);
-		closeProcessStore.getStack().push(START_OPTION);
-	}
+	protected void interpretAfterChilds(Long id) throws ReflectiveOperationException {
+		super.interpretAfterChilds(id);
+		this.openProcessStore.getTierStack().push("optional");
 
+		lastTreeNode = this;
+	}
 }

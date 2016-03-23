@@ -3,13 +3,14 @@
  */
 package com.github.uscexp.grappa.extension.parser.peg;
 
+import java.util.Stack;
+
 import org.parboiled.Node;
 
 /**
  * Command implementation for the <code>PegParser</code> rule: OR.
  */
 public class AstORTreeNode<V> extends AstPegBaseTreeNode<V> {
-
 	public static final String FIRST_OF = "firstOf";
 
 	public AstORTreeNode(Node<?> node, String value) {
@@ -17,14 +18,16 @@ public class AstORTreeNode<V> extends AstPegBaseTreeNode<V> {
 	}
 
 	@Override
-	protected void interpret(Long id)
-		throws ReflectiveOperationException {
-		super.interpret(id);
-		
-		if(openProcessStore.getStack().isEmpty() || !FIRST_OF.equals(openProcessStore.getStack().peek())) {
-			openProcessStore.getStack().push(FIRST_OF);
+	protected void interpretAfterChilds(Long id) throws ReflectiveOperationException {
+		super.interpretAfterChilds(id);
+		Stack<Object> openStack = this.openProcessStore.getTierStack();
+		if ((openStack.isEmpty()) || (!"firstOf".equals(openStack.peek()))) {
+			openStack.push("firstOf");
 		}
-		closeProcessStore.getStack().push(AstSequenceTreeNode.START_SEQUENCE);
+		if (!this.tearedUp) {
+			this.processStore.tierOneUp(true);
+			this.openProcessStore.tierOneUp(true);
+		}
+		lastTreeNode = this;
 	}
-
 }

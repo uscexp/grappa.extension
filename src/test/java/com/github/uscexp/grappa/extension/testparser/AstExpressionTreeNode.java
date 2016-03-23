@@ -21,8 +21,12 @@ public class AstExpressionTreeNode extends AstCommandTreeNode<Double> {
 	}
 
 	@Override
-	protected void interpret(Long id)
-		throws ReflectiveOperationException {
+	protected void interpretBeforeChilds(Long id) throws Exception {
+	}
+
+	@Override
+	protected void interpretAfterChilds(Long id)
+		throws Exception {
 		int sumIdx = value.indexOf('+');
 		int subIdx = value.indexOf('-');
 		if ((sumIdx > -1) || (subIdx > -1)) {
@@ -38,5 +42,4 @@ public class AstExpressionTreeNode extends AstCommandTreeNode<Double> {
 			stack.push(result);
 		}
 	}
-
 }

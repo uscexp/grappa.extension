@@ -19,7 +19,11 @@ public class AstNopTreeNode<V> extends AstTreeNode<V> {
 	}
 
 	@Override
-	protected void interpret(Long id) throws ReflectiveOperationException {
+	protected void interpretBeforeChilds(Long id) throws Exception {
+	}
+
+	@Override
+	protected void interpretAfterChilds(Long id) throws Exception {
 	}
 
 }
