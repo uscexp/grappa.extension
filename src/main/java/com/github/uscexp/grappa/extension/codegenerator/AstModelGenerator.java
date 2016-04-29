@@ -1,24 +1,8 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.codegenerator;
 
-import com.github.uscexp.grappa.extension.annotations.AstCommand;
-import com.github.uscexp.grappa.extension.interpreter.AstInterpreter;
-import com.github.uscexp.grappa.extension.interpreter.MethodNameToTreeNodeInfoMaps;
-import com.github.uscexp.grappa.extension.nodes.AstCommandTreeNode;
-import com.github.uscexp.grappa.extension.nodes.AstTreeNode;
-import com.sun.codemodel.JBlock;
-import com.sun.codemodel.JClass;
-import com.sun.codemodel.JClassAlreadyExistsException;
-import com.sun.codemodel.JCodeModel;
-import com.sun.codemodel.JDefinedClass;
-import com.sun.codemodel.JDocComment;
-import com.sun.codemodel.JMethod;
-import com.sun.codemodel.JMod;
-import com.sun.codemodel.JType;
-import org.parboiled.BaseParser;
-import org.parboiled.Parboiled;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -31,10 +15,26 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.github.fge.grappa.parsers.BaseParser;
+import com.github.uscexp.grappa.extension.annotations.AstCommand;
+import com.github.uscexp.grappa.extension.interpreter.MethodNameToTreeNodeInfoMaps;
+import com.github.uscexp.grappa.extension.nodes.AstCommandTreeNode;
+import com.github.uscexp.grappa.extension.nodes.AstTreeNode;
+import com.github.uscexp.grappa.extension.nodes.treeconstruction.AstTreeNodeBuilder;
+import com.sun.codemodel.JBlock;
+import com.sun.codemodel.JClass;
+import com.sun.codemodel.JClassAlreadyExistsException;
+import com.sun.codemodel.JCodeModel;
+import com.sun.codemodel.JDefinedClass;
+import com.sun.codemodel.JDocComment;
+import com.sun.codemodel.JMethod;
+import com.sun.codemodel.JMod;
+import com.sun.codemodel.JType;
+
 /**
  * The {@link AstModelGenerator} creates the model classes from a {@link BaseParser} extended annotated parser class. It creates the
  * corresponding java source files for the {@link AstCommand} annotated rules in the parser class. The generated classes will extend <code>
- * AstCommandTreeNode</code> and the to be implemented method <code>interpret</code>.
+ * AstCommandTreeNode</code> and the to be implemented methods <code>interpretBeforeChilds</code> and <code>interpretAfterChilds</code>.
  *
  * @author  haui
  */
@@ -56,11 +56,11 @@ public class AstModelGenerator {
 			sourceOutputPath = ".";
 		}
 
-		@SuppressWarnings("unchecked")
-		BaseParser<? extends BaseParser<?>> parser = (BaseParser<? extends BaseParser<?>>) Parboiled.createParser(parserClass);
+//		@SuppressWarnings("unchecked")
+//		BaseParser<? extends BaseParser<?>> parser = (BaseParser<? extends BaseParser<?>>) Grappa.createParser(parserClass);
 
-		MethodNameToTreeNodeInfoMaps methodNameToTreeNodeInfoMaps = AstInterpreter.findImplementationClassesAndAnnotationTypes(
-				parser.getClass());
+		MethodNameToTreeNodeInfoMaps methodNameToTreeNodeInfoMaps = AstTreeNodeBuilder.findImplementationClassesAndAnnotationTypes(
+				parserClass);
 
 		Set<String> methodNames = methodNameToTreeNodeInfoMaps.getMethodNames();
 
@@ -76,7 +76,7 @@ public class AstModelGenerator {
 		JCodeModel codeModel = new JCodeModel();
 
 		if (annotation instanceof AstCommand) {
-			String classname = AstInterpreter.getClassname(methodName, (AstCommand) annotation, methodNameToTreeNodeInfoMaps);
+			String classname = AstTreeNodeBuilder.getClassname(methodName, (AstCommand) annotation, methodNameToTreeNodeInfoMaps);
 			try {
 				createClassFile(parserClass, sourceOutputPath, methodName, codeModel, classname);
 			} catch (JClassAlreadyExistsException e) {

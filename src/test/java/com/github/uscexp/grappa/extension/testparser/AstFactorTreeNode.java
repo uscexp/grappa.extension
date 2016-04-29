@@ -1,11 +1,9 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.testparser;
 
 import java.util.Stack;
-
-import org.parboiled.Node;
 
 import com.github.uscexp.grappa.extension.interpreter.ProcessStore;
 import com.github.uscexp.grappa.extension.nodes.AstCommandTreeNode;
@@ -16,8 +14,8 @@ import com.github.uscexp.grappa.extension.nodes.AstCommandTreeNode;
  */
 public class AstFactorTreeNode extends AstCommandTreeNode<Double> {
 
-	public AstFactorTreeNode(Node<?> node, String value) {
-		super(node, value);
+	public AstFactorTreeNode(String rule, String value) {
+		super(rule, value);
 	}
 
 	@Override

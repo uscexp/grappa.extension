@@ -4,22 +4,23 @@
 package com.github.uscexp.grappa.extension.interpreter;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.Date;
 
 import org.junit.Test;
-import org.parboiled.Node;
-import org.parboiled.Parboiled;
-import org.parboiled.errors.ErrorUtils;
-import org.parboiled.parserunners.RecoveringParseRunner;
-import org.parboiled.support.ParseTreeUtils;
-import org.parboiled.support.ParsingResult;
 
+import com.github.fge.grappa.Grappa;
+import com.github.fge.grappa.parsers.BaseParser;
+import com.github.fge.grappa.run.ListeningParseRunner;
+import com.github.fge.grappa.run.ParsingResult;
 import com.github.uscexp.grappa.extension.exception.AstInterpreterException;
+import com.github.uscexp.grappa.extension.nodes.AstTreeNode;
+import com.github.uscexp.grappa.extension.nodes.treeconstruction.AstTreeNodeBuilder;
+import com.github.uscexp.grappa.extension.parser.AstTreeParserResult;
 import com.github.uscexp.grappa.extension.testparser.CalculatorParser;
 import com.github.uscexp.grappa.extension.testparser.subclass.ExtendedCalculatorParser;
+import com.github.uscexp.grappa.extension.util.AstTreeUtil;
 
 /**
  * @author haui
@@ -30,21 +31,13 @@ public class AstInterpreterTest {
 	@Test
 	public void testHappyCase() throws Exception {
 		String input = "2 * 2 + 2 * 3";
-		CalculatorParser calculatorParser = Parboiled.createParser(CalculatorParser.class);
+		CalculatorParser calculatorParser = Grappa.createParser(CalculatorParser.class);
 		
-		RecoveringParseRunner<CalculatorParser> recoveringParseRunner = new RecoveringParseRunner<>(calculatorParser.inputLine());
-		
-		ParsingResult<CalculatorParser> parsingResult = recoveringParseRunner.run(input);
-		
-		assertFalse(parsingResult.hasErrors());
-		
-		Node<CalculatorParser> root = parsingResult.parseTreeRoot;
-		
-		System.out.println("Root node text: " + ParseTreeUtils.getNodeText(root, parsingResult.inputBuffer));
-		
+		AstTreeParserResult<Double> astTreeParserResult = executeParser(CalculatorParser.class, calculatorParser, input, false);
+
 		AstInterpreter<Double> interpreter = new AstInterpreter<>();
 		Long id = new Date().getTime();
-		interpreter.interpretBackwardOrder(calculatorParser.getClass(), parsingResult, id);
+		interpreter.interpretBackwardOrder(CalculatorParser.class, astTreeParserResult, id);
 		Object result = ProcessStore.getInstance(id).getStack().peek();
 		
 		assertEquals(new Double(10), result);
@@ -53,23 +46,34 @@ public class AstInterpreterTest {
 	}
 
 	@Test
+	public void testHappyCaseRemoveAstNopTreeNodes() throws Exception {
+		String input = "2 * 2 + 2 * 3";
+		CalculatorParser calculatorParser = Grappa.createParser(CalculatorParser.class);
+		
+		AstTreeParserResult<Double> astTreeParserResult = executeParser(CalculatorParser.class, calculatorParser, input, true);
+
+		AstInterpreter<Double> interpreter = new AstInterpreter<>();
+		Long id = new Date().getTime();
+		interpreter.interpretBackwardOrder(calculatorParser.getClass(), astTreeParserResult, id);
+		Object result = ProcessStore.getInstance(id).getStack().peek();
+		
+		assertEquals(new Double(10), result);
+		
+		AstTreeUtil.printAstTree(astTreeParserResult.getRootNode(), System.out);
+		interpreter.cleanUp(id);
+		System.out.println("-------------------");
+	}
+
+	@Test
 	public void testSqrt() throws Exception {
 		String input = "SQRT(4)";
-		CalculatorParser calculatorParser = Parboiled.createParser(CalculatorParser.class);
+		CalculatorParser calculatorParser = Grappa.createParser(CalculatorParser.class);
 		
-		RecoveringParseRunner<CalculatorParser> recoveringParseRunner = new RecoveringParseRunner<>(calculatorParser.inputLine());
-		
-		ParsingResult<CalculatorParser> parsingResult = recoveringParseRunner.run(input);
-		
-		assertFalse(parsingResult.hasErrors());
-		
-		Node<CalculatorParser> root = parsingResult.parseTreeRoot;
-		
-		System.out.println("Root node text: " + ParseTreeUtils.getNodeText(root, parsingResult.inputBuffer));
+		AstTreeParserResult<Double> astTreeParserResult = executeParser(CalculatorParser.class, calculatorParser, input, false);
 		
 		AstInterpreter<Double> interpreter = new AstInterpreter<>();
 		Long id = new Date().getTime();
-		interpreter.interpretBackwardOrder(calculatorParser.getClass(), parsingResult, id);
+		interpreter.interpretBackwardOrder(calculatorParser.getClass(), astTreeParserResult, id);
 		Object result = ProcessStore.getInstance(id).getStack().peek();
 		
 		assertEquals(new Double(2), result);
@@ -80,51 +84,53 @@ public class AstInterpreterTest {
 	@Test(expected = AstInterpreterException.class)
 	public void testWrongSyntax() throws Exception {
 		String input = ")2(2+2*3";
-		CalculatorParser calculatorParser = Parboiled.createParser(CalculatorParser.class);
+		CalculatorParser calculatorParser = Grappa.createParser(CalculatorParser.class);
 		
-		RecoveringParseRunner<CalculatorParser> recoveringParseRunner = new RecoveringParseRunner<>(calculatorParser.inputLine());
-		
-		ParsingResult<CalculatorParser> parsingResult = recoveringParseRunner.run(input);
-		
-		assertTrue(parsingResult.hasErrors());
-		if(parsingResult.hasErrors()) {
-			String string = String.format("Calculator parse error(s): %s", ErrorUtils.printParseErrors(parsingResult));
-			System.out.println(string);
-		}
-		
-		Node<CalculatorParser> root = parsingResult.parseTreeRoot;
-		
-		System.out.println("Root node text: " + ParseTreeUtils.getNodeText(root, parsingResult.inputBuffer));
+		AstTreeParserResult<Double> astTreeParserResult = executeParser(CalculatorParser.class, calculatorParser, input, false);
 		System.out.println("-------------------");
 		
 		AstInterpreter<Double> interpreter = new AstInterpreter<>();
 		Long id = new Date().getTime();
-		interpreter.interpretBackwardOrder(calculatorParser.getClass(), parsingResult, id);
+		interpreter.interpretBackwardOrder(calculatorParser.getClass(), astTreeParserResult, id);
 		interpreter.cleanUp(id);
 	}
 
 	@Test
 	public void testExtendedParserHappyCase() throws Exception {
 		String input = "2 * 2 + 2 * 3";
-		ExtendedCalculatorParser calculatorParser = Parboiled.createParser(ExtendedCalculatorParser.class);
+		ExtendedCalculatorParser calculatorParser = Grappa.createParser(ExtendedCalculatorParser.class);
 		
-		RecoveringParseRunner<ExtendedCalculatorParser> recoveringParseRunner = new RecoveringParseRunner<>(calculatorParser.extendeInputLine());
-		
-		ParsingResult<ExtendedCalculatorParser> parsingResult = recoveringParseRunner.run(input);
-		
-		assertFalse(parsingResult.hasErrors());
-		
-		Node<ExtendedCalculatorParser> root = parsingResult.parseTreeRoot;
-		
-		System.out.println("Root node text: " + ParseTreeUtils.getNodeText(root, parsingResult.inputBuffer));
+		AstTreeParserResult<Double> astTreeParserResult = executeParser(ExtendedCalculatorParser.class, calculatorParser, input, false);
 		
 		AstInterpreter<Double> interpreter = new AstInterpreter<>();
 		Long id = new Date().getTime();
-		interpreter.interpretBackwardOrder(calculatorParser.getClass(), parsingResult, id);
+		interpreter.interpretBackwardOrder(ExtendedCalculatorParser.class, astTreeParserResult, id);
 		Object result = ProcessStore.getInstance(id).getStack().peek();
 		
 		assertEquals(new Double(10), result);
 		interpreter.cleanUp(id);
 		System.out.println("-------------------");
+	}
+
+	private AstTreeParserResult<Double> executeParser(Class<? extends BaseParser<?>> parserClass, CalculatorParser calculatorParser, String input, boolean removeAstNopTreeNodes) {
+		final AstTreeNodeBuilder<Double> treeNodeBuilder = new AstTreeNodeBuilder<Double>(parserClass, removeAstNopTreeNodes);
+		ListeningParseRunner<Double> parseRunner = new ListeningParseRunner<>(calculatorParser.inputLine());
+		
+		parseRunner.registerListener(treeNodeBuilder);
+
+		ParsingResult<Double> parsingResult = parseRunner.run(input);
+		
+		assertNotNull(parsingResult);
+		
+		AstTreeNode<Double> root = treeNodeBuilder.getRootNode();
+		
+		if(root != null) {
+			System.out.println("Root node text: " + root.getValue());
+		} else {
+			System.err.println(treeNodeBuilder.getParsingErrors());
+		}
+		
+		AstTreeParserResult<Double> astTreeParserResult = new AstTreeParserResult<>(parsingResult, treeNodeBuilder.getRootNode());
+		return astTreeParserResult;
 	}
 }

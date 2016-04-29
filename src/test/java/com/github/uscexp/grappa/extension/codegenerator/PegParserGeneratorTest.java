@@ -1,9 +1,9 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.codegenerator;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -24,15 +24,15 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
 import org.junit.Test;
-import org.parboiled.BaseParser;
-import org.parboiled.Parboiled;
-import org.parboiled.Rule;
-import org.parboiled.errors.ErrorUtils;
-import org.parboiled.parserunners.RecoveringParseRunner;
-import org.parboiled.support.ParsingResult;
 
+import com.github.fge.grappa.Grappa;
+import com.github.fge.grappa.parsers.BaseParser;
+import com.github.fge.grappa.rules.Rule;
+import com.github.fge.grappa.run.ListeningParseRunner;
+import com.github.fge.grappa.run.ParsingResult;
+import com.github.uscexp.grappa.extension.exception.AstInterpreterException;
 import com.github.uscexp.grappa.extension.exception.PegParserGeneratorException;
-import com.github.uscexp.grappa.extension.parser.peg.PegParser;
+import com.github.uscexp.grappa.extension.nodes.treeconstruction.AstTreeNodeBuilder;
 
 /**
  * @author haui
@@ -76,11 +76,16 @@ public class PegParserGeneratorTest {
 		Class<? extends BaseParser<String>> cls = (Class<? extends BaseParser<String>>) Class.forName(TEST_PARSER_CLASS, true, classLoader);
 
 		@SuppressWarnings("rawtypes")
-		BaseParser parser = Parboiled.createParser(cls);
+		BaseParser parser = Grappa.createParser(cls);
 
 		Method method = parser.getClass().getDeclaredMethod("grammar", (Class<?>[]) null);
 
-		RecoveringParseRunner<PegParser> recoveringParseRunner = new RecoveringParseRunner<>((Rule) method.invoke(parser, (Object[]) null));
+		@SuppressWarnings("unchecked")
+		final AstTreeNodeBuilder<String> treeNodeBuilder = new AstTreeNodeBuilder<String>((Class<? extends BaseParser<?>>) parser.getClass(), false);
+		
+		ListeningParseRunner<String> parseRunner = new ListeningParseRunner<>((Rule) method.invoke(parser, (Object[]) null));
+
+		parseRunner.registerListener(treeNodeBuilder);
 
 		String input = null;
 
@@ -91,13 +96,10 @@ public class PegParserGeneratorTest {
 		byte[] encoded = Files.readAllBytes(Paths.get(inputFile.getAbsolutePath()));
 		input = new String(encoded, encoding);
 
-		ParsingResult<PegParser> parsingResult = recoveringParseRunner.run(input);
+		ParsingResult<String> parsingResult = parseRunner.run(input);
 
-		if (parsingResult.hasErrors()) {
-			throw new PegParserGeneratorException(String.format("PEG definition parse error(s): %s", ErrorUtils.printParseErrors(parsingResult)));
-		}
-		assertFalse(parsingResult.hasErrors());
-
+		assertNotNull(parsingResult);
+		
 		// clean up
 		file.delete();
 		file = new File(pathname + ".class");
@@ -117,7 +119,7 @@ public class PegParserGeneratorTest {
 		pegParserGeneratorSUT.generateParserFromFile(TEST_PARSER_CLASS, TEST_GENERIC_TYPE_CLASS, SOURCE_OUTPUT_PATH, "nonexistent", null);
 	}
 
-	@Test(expected = PegParserGeneratorException.class)
+	@Test(expected = AstInterpreterException.class)
 	public void testGenerateParserFromStringFromFileInputError() throws Exception {
 		pegParserGeneratorSUT.generateParserFromString(TEST_PARSER_CLASS, TEST_GENERIC_TYPE_CLASS, SOURCE_OUTPUT_PATH, "a - bc");
 	}

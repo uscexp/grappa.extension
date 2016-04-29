@@ -1,25 +1,8 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.codegenerator;
 
-import com.github.uscexp.grappa.extension.exception.AstInterpreterException;
-import com.github.uscexp.grappa.extension.exception.PegParserGeneratorException;
-import com.github.uscexp.grappa.extension.interpreter.AstInterpreter;
-import com.github.uscexp.grappa.extension.interpreter.ProcessStore;
-import com.github.uscexp.grappa.extension.parser.peg.PegParser;
-import com.google.common.base.Preconditions;
-import com.sun.codemodel.JClass;
-import com.sun.codemodel.JClassAlreadyExistsException;
-import com.sun.codemodel.JCodeModel;
-import com.sun.codemodel.JDefinedClass;
-import com.sun.codemodel.JDocComment;
-import org.parboiled.BaseParser;
-import org.parboiled.Parboiled;
-import org.parboiled.annotations.BuildParseTree;
-import org.parboiled.errors.ErrorUtils;
-import org.parboiled.parserunners.RecoveringParseRunner;
-import org.parboiled.support.ParsingResult;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -28,6 +11,24 @@ import java.nio.file.Paths;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.github.fge.grappa.Grappa;
+import com.github.fge.grappa.parsers.BaseParser;
+import com.github.fge.grappa.run.ListeningParseRunner;
+import com.github.fge.grappa.run.ParsingResult;
+import com.github.uscexp.grappa.extension.exception.AstInterpreterException;
+import com.github.uscexp.grappa.extension.exception.PegParserGeneratorException;
+import com.github.uscexp.grappa.extension.interpreter.AstInterpreter;
+import com.github.uscexp.grappa.extension.interpreter.ProcessStore;
+import com.github.uscexp.grappa.extension.nodes.treeconstruction.AstTreeNodeBuilder;
+import com.github.uscexp.grappa.extension.parser.AstTreeParserResult;
+import com.github.uscexp.grappa.extension.parser.peg.PegParser;
+import com.google.common.base.Preconditions;
+import com.sun.codemodel.JClass;
+import com.sun.codemodel.JClassAlreadyExistsException;
+import com.sun.codemodel.JCodeModel;
+import com.sun.codemodel.JDefinedClass;
+import com.sun.codemodel.JDocComment;
 
 /**
  * The {@link PegParserGenerator} generates a {@link BaseParser} extended parser java class file, from a given Parser Expression Grammar
@@ -46,7 +47,7 @@ public class PegParserGenerator {
 	private File file = null;
 
 	private PegParser parser;
-	private ParsingResult<PegParser> parsingResult;
+	private AstTreeParserResult<String> parsingResult;
 	private String parserClassString;
 	private String genericTypeName;
 
@@ -80,7 +81,7 @@ public class PegParserGenerator {
 		throws PegParserGeneratorException, AstInterpreterException {
 		Preconditions.checkNotNull(pegInput);
 
-		parser = Parboiled.createParser(PegParser.class);
+		parser = Grappa.createParser(PegParser.class);
 
 		parsingResult = parseInput(pegInput);
 
@@ -88,17 +89,19 @@ public class PegParserGenerator {
 
 	}
 
-	private ParsingResult<PegParser> parseInput(String pegInput)
+	private AstTreeParserResult<String> parseInput(String pegInput)
 		throws PegParserGeneratorException {
-		RecoveringParseRunner<PegParser> recoveringParseRunner = new RecoveringParseRunner<>(parser.grammar());
+		final AstTreeNodeBuilder<String> treeNodeBuilder = new AstTreeNodeBuilder<String>(PegParser.class, false);
+		
+		final ListeningParseRunner<String> parseRunner = new ListeningParseRunner<>(parser.grammar());
+		
+		parseRunner.registerListener(treeNodeBuilder);
 
-		ParsingResult<PegParser> parsingResult = recoveringParseRunner.run(pegInput);
+		final ParsingResult<String> parsingResult = parseRunner.run(pegInput);
+		
+		AstTreeParserResult<String> astTreeParserResult = new AstTreeParserResult<>(parsingResult, treeNodeBuilder.getRootNode());
 
-		if (parsingResult.hasErrors()) {
-			throw new PegParserGeneratorException(String.format("PEG definition parse error(s): %s",
-					ErrorUtils.printParseErrors(parsingResult)));
-		}
-		return parsingResult;
+		return astTreeParserResult;
 	}
 
 	private void generateParserClassFile(String parserClassString, String genericTypeName, String sourceOutputPath)
@@ -144,7 +147,6 @@ public class PegParserGenerator {
 		JClass superClass = codeModel.ref(BaseParser.class).narrow(genericType);
 
 		definedClass._extends(superClass);
-		definedClass.annotate(BuildParseTree.class);
 		JDocComment javadoc = definedClass.javadoc();
 		String filename = (file != null) ? ("'" + file.getName() + "'") : "";
 		String lastWord = (file != null) ? "input file" : "input string";

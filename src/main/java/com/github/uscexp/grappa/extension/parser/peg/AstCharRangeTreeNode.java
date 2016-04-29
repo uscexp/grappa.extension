@@ -1,18 +1,16 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.parser.peg;
 
 import java.util.Stack;
 
-import org.parboiled.Node;
-
 /**
  * Command implementation for the <code>PegParser</code> rule: charRange.
  */
 public class AstCharRangeTreeNode<V> extends AstPegBaseTreeNode<V> {
-	public AstCharRangeTreeNode(Node<?> node, String value) {
-		super(node, value);
+	public AstCharRangeTreeNode(String rule, String value) {
+		super(rule, value);
 	}
 
 	@Override
@@ -32,6 +30,5 @@ public class AstCharRangeTreeNode<V> extends AstPegBaseTreeNode<V> {
 		} else {
 			stack.push(rangeStart);
 		}
-		lastTreeNode = this;
 	}
 }

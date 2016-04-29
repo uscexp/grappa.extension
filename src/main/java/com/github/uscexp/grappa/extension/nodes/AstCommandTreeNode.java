@@ -1,9 +1,7 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.nodes;
-
-import org.parboiled.Node;
 
 import com.github.uscexp.grappa.extension.annotations.AstCommand;
 
@@ -16,7 +14,7 @@ import com.github.uscexp.grappa.extension.annotations.AstCommand;
  */
 public abstract class AstCommandTreeNode<V> extends AstTreeNode<V> {
 
-	public AstCommandTreeNode(Node<?> node, String value) {
-		super(node, value);
+	public AstCommandTreeNode(String rule, String value) {
+		super(rule, value);
 	}
 }

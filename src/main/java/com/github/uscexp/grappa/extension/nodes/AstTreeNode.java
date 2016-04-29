@@ -1,16 +1,15 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.nodes;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.parboiled.Node;
-import org.parboiled.support.ParsingResult;
-import org.parboiled.trees.MutableTreeNodeImpl;
-
+import com.github.fge.grappa.run.ParsingResult;
 import com.github.uscexp.grappa.extension.interpreter.AstInterpreter;
 import com.github.uscexp.grappa.extension.interpreter.ProcessStore;
 
@@ -21,23 +20,32 @@ import com.github.uscexp.grappa.extension.interpreter.ProcessStore;
  * @author haui
  *
  */
-public abstract class AstTreeNode<V> extends MutableTreeNodeImpl<AstTreeNode<V>> {
+public abstract class AstTreeNode<V> {
 
-	protected Node<?> parseNode;
+	protected String rule;
 	protected String value;
+	protected AstTreeNode<V> parent;
+	protected List<AstTreeNode<V>> children = new ArrayList<>();
 
-	public AstTreeNode(Node<?> node, String value) {
+	public AstTreeNode(String rule, String value) {
 		super();
-		this.parseNode = node;
+		this.rule = rule;
 		this.value = value;
 	}
 	
-	public void interpretIt(Long id) throws Exception {
+	public void interpretIt(Long id, boolean forewardOrder) throws Exception {
 	    if( !ProcessStore.getInstance(id).checkPrecondition())
 	        return;
 		    interpretBeforeChilds(id);
-			for (AstTreeNode<V> astTreeNode : getChildren()) {
-				astTreeNode.interpretIt(id);
+		    if(forewardOrder) {
+				for (AstTreeNode<V> astTreeNode : getChildren()) {
+					astTreeNode.interpretIt(id, forewardOrder);
+				}
+		    } else {
+				for (int i = children.size() - 1; i >= 0; i--) {
+					AstTreeNode<V> childNode = children.get(i);
+					childNode.interpretIt(id, forewardOrder);
+				}
 			}
 			interpretAfterChilds(id);
 	}
@@ -77,8 +85,36 @@ public abstract class AstTreeNode<V> extends MutableTreeNodeImpl<AstTreeNode<V>>
 
 	@Override
 	public String toString() {
-		String text = "[" + getClass().getSimpleName() + "].[" + parseNode.getLabel() + "] '" + value + "'";
+		String text = "[" + getClass().getSimpleName() + "].[" + rule + "] '" + value + "'";
 		text = text.replaceAll("(\\r|\\n|\\r\\n)+", "\\\\n");
 		return text;
+	}
+
+	public AstTreeNode<V> getParent() {
+		return parent;
+	}
+
+	public void setParent(AstTreeNode<V> parent) {
+		this.parent = parent;
+	}
+
+	public List<AstTreeNode<V>> getChildren() {
+		return children;
+	}
+
+	public void setChildren(List<AstTreeNode<V>> children) {
+		this.children = children;
+	}
+
+	public String getRule() {
+		return rule;
+	}
+
+	public String getValue() {
+		return value;
+	}
+
+	public void setValue(String value) {
+		this.value = value;
 	}
 }

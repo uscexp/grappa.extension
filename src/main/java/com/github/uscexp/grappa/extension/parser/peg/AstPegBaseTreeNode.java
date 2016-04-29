@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.parser.peg;
 
@@ -11,9 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
-import org.parboiled.BaseParser;
-import org.parboiled.Node;
-
+import com.github.fge.grappa.parsers.BaseParser;
 import com.github.uscexp.grappa.extension.codegenerator.PegParserGenerator;
 import com.github.uscexp.grappa.extension.codegenerator.ReservedJavaWords;
 import com.github.uscexp.grappa.extension.interpreter.ProcessStore;
@@ -22,7 +20,11 @@ import com.sun.codemodel.JCodeModel;
 import com.sun.codemodel.JDefinedClass;
 
 public class AstPegBaseTreeNode<V> extends AstCommandTreeNode<V> {
-	protected static AstPegBaseTreeNode<?> lastTreeNode;
+	protected static final String ZERO_OR_MORE = "zeroOrMore";
+	protected static final String ONE_OR_MORE = "oneOrMore";
+	protected static final String OPTIONAL = "optional";
+	protected static final String FIRST_OF = "firstOf";
+	
 	protected ProcessStore<String> processStore;
 	protected ProcessStore<String> openProcessStore;
 	protected ProcessStore<String> closeProcessStore;
@@ -33,8 +35,8 @@ public class AstPegBaseTreeNode<V> extends AstCommandTreeNode<V> {
 	private Map<String, Boolean> existenceMap = new HashMap<>();
 	protected boolean tearedUp = false;
 
-	public AstPegBaseTreeNode(Node<?> node, String value) {
-		super(node, value);
+	public AstPegBaseTreeNode(String rule, String value) {
+		super(rule, value);
 		Field[] fields = BaseParser.class.getDeclaredFields();
 		Field[] arrayOfField1;
 		int j = (arrayOfField1 = fields).length;
@@ -48,15 +50,8 @@ public class AstPegBaseTreeNode<V> extends AstCommandTreeNode<V> {
 
 	@Override
 	protected void interpretAfterChilds(Long id) throws ReflectiveOperationException {
-		this.processStore = ProcessStore.getInstance(id);
-		this.openProcessStore = ProcessStore.getInstance(Long.valueOf(id.longValue() + PegParserGenerator.OPEN));
 		this.codeModel = ((JCodeModel) this.processStore.getVariable("codeModel"));
 		this.definedClass = ((JDefinedClass) this.processStore.getVariable("definedClass"));
-		if ((lastTreeNode == null) || (AstDefinitionTreeNode.class.isAssignableFrom(lastTreeNode.getClass()))) {
-			this.processStore.tierOneUp(true);
-			this.openProcessStore.tierOneUp(true);
-			this.tearedUp = true;
-		}
 	}
 
 	protected String checkPostponedAction(String bodyString) {
@@ -65,9 +60,9 @@ public class AstPegBaseTreeNode<V> extends AstCommandTreeNode<V> {
 		if (!openStack.isEmpty()) {
 			openMethod = (String) openStack.pop();
 		}
-		if ((openMethod.equals("zeroOrMore")) || (openMethod.equals("oneOrMore")) || (openMethod.equals("optional")) || (openMethod.equals("firstOf"))) {
+		if ((openMethod.equals(ZERO_OR_MORE)) || (openMethod.equals(ONE_OR_MORE)) || (openMethod.equals(OPTIONAL)) || (openMethod.equals(FIRST_OF))) {
 			bodyString = openMethod + "(" + bodyString + ")";
-		} else {
+		} else if(openMethod != null && !openMethod.isEmpty()) {
 			openStack.push(openMethod);
 		}
 		return bodyString;
@@ -104,5 +99,7 @@ public class AstPegBaseTreeNode<V> extends AstCommandTreeNode<V> {
 
 	@Override
 	protected void interpretBeforeChilds(Long id) throws ReflectiveOperationException {
+		this.processStore = ProcessStore.getInstance(id);
+		this.openProcessStore = ProcessStore.getInstance(Long.valueOf(id.longValue() + PegParserGenerator.OPEN));
 	}
 }

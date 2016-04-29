@@ -1,3 +1,6 @@
+/*
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
+ */
 package com.github.uscexp.grappa.extension.interpreter.type;
 
 import java.io.BufferedReader;
@@ -7,6 +10,10 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
+/**
+ * @author haui
+ *
+ */
 public class Primitive {
 	public static final short BOOLEAN = 1;
 	public static final short CHARACTER = 2;
@@ -201,29 +208,29 @@ public class Primitive {
 	}
 
 	public static short getType(String type) {
-		short typeIdx = 9;
+		short typeIdx = STRING;
 		if (type.equals("boolean")) {
-			typeIdx = 1;
+			typeIdx = BOOLEAN;
 		} else if (type.equals("char")) {
-			typeIdx = 2;
+			typeIdx = CHARACTER;
 		} else if (type.equals("byte")) {
-			typeIdx = 3;
+			typeIdx = BYTE;
 		} else if (type.equals("short")) {
-			typeIdx = 4;
+			typeIdx = SHORT;
 		} else if (type.equals("int")) {
-			typeIdx = 5;
+			typeIdx = INTEGER;
 		} else if (type.equals("long")) {
-			typeIdx = 6;
+			typeIdx = LONG;
 		} else if (type.equals("float")) {
-			typeIdx = 7;
+			typeIdx = FLOAT;
 		} else if (type.equals("double")) {
-			typeIdx = 8;
+			typeIdx = DOUBLE;
 		} else if (type.equals("string")) {
-			typeIdx = 9;
+			typeIdx = STRING;
 		} else if (type.equals("filereader")) {
-			typeIdx = 10;
+			typeIdx = FILE_READER;
 		} else if (type.equals("filewriter")) {
-			typeIdx = 11;
+			typeIdx = FILE_WRITER;
 		}
 		return typeIdx;
 	}

@@ -1,9 +1,7 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.nodes;
-
-import org.parboiled.Node;
 
 import com.github.uscexp.grappa.extension.annotations.AstValue;
 import com.github.uscexp.grappa.extension.interpreter.AstInterpreter;
@@ -23,8 +21,8 @@ public class AstValueTreeNode<V> extends AstTreeNode<V> {
 	private Class<?> factoryClass;
 	private String factoryMethod;
 	
-	public AstValueTreeNode(Node<?> node, String value, Class<?> valueType, Class<?> factoryClass, String factoryMethod) {
-		super(node, value);
+	public AstValueTreeNode(String rule, String value, Class<?> valueType, Class<?> factoryClass, String factoryMethod) {
+		super(rule, value);
 		this.valueType = valueType;
 		this.factoryClass = factoryClass;
 		this.factoryMethod = factoryMethod;

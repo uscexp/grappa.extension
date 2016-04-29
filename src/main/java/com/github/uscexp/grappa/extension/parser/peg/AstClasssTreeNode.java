@@ -1,30 +1,59 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.parser.peg;
 
 import java.util.Stack;
 
-import org.parboiled.Node;
-
 /**
  * Command implementation for the <code>PegParser</code> rule: classs.
  */
 public class AstClasssTreeNode<V> extends AstPegBaseTreeNode<V> {
-	public AstClasssTreeNode(Node<?> node, String value) {
-		super(node, value);
+	public AstClasssTreeNode(String rule, String value) {
+		super(rule, value);
+	}
+
+	@Override
+	protected void interpretBeforeChilds(Long id) throws ReflectiveOperationException {
+		super.interpretBeforeChilds(id);
+		Stack<Object> openStack = this.openProcessStore.getTierStack();
+		String peek = "";
+		
+		if (!openStack.isEmpty()) {
+			peek = (String) openStack.peek();
+		}
+		this.processStore.tierOneUp(true);
+		this.openProcessStore.tierOneUp(true);
+		if ((peek.equals(ZERO_OR_MORE)) || (peek.equals(ONE_OR_MORE)) || (peek.equals(OPTIONAL))) {
+			this.openProcessStore.getTierStack().push(openStack.pop());
+		}
 	}
 
 	@Override
 	protected void interpretAfterChilds(Long id) throws ReflectiveOperationException {
 		super.interpretAfterChilds(id);
 		Stack<Object> stack = this.processStore.getTierStack();
-		String body = (String) stack.pop();
 
-		body = checkPostponedAction(body);
+		String rule = "";
+		String stackValue = "";
 
-		stack.push(body);
-
-		lastTreeNode = this;
+		int i = 0;
+		while (!stack.isEmpty()) {
+			stackValue = (String) stack.pop();
+			if (i > 0) {
+				rule = rule + ", ";
+			}
+			rule = rule + stackValue;
+			i++;
+		}
+		if (i > 1) {
+			rule = FIRST_OF + "(" + rule + ")";
+		}
+		rule = checkPostponedAction(rule);
+		
+		this.processStore.tierOneDown(true);
+		this.openProcessStore.tierOneDown(true);
+		if(!rule.isEmpty())
+			this.processStore.getTierStack().push(rule);
 	}
 }

@@ -1,18 +1,16 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.parser.peg;
 
 import java.util.Stack;
 
-import org.parboiled.Node;
-
 /**
  * Command implementation for the <code>PegParser</code> rule: LOOKAHEAD.
  */
 public class AstLOOKAHEADTreeNode<V> extends AstPegBaseTreeNode<V> {
-	public AstLOOKAHEADTreeNode(Node<?> node, String value) {
-		super(node, value);
+	public AstLOOKAHEADTreeNode(String rule, String value) {
+		super(rule, value);
 	}
 
 	@Override
@@ -21,7 +19,5 @@ public class AstLOOKAHEADTreeNode<V> extends AstPegBaseTreeNode<V> {
 		Stack<Object> stack = this.processStore.getTierStack();
 		String param = (String) stack.pop();
 		stack.push("test(" + param + ")");
-
-		lastTreeNode = this;
 	}
 }

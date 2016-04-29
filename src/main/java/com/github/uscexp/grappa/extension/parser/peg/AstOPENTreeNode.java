@@ -1,19 +1,17 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.parser.peg;
 
 import java.util.Stack;
-
-import org.parboiled.Node;
 
 /**
  * Command implementation for the <code>PegParser</code> rule: OPEN.
  * 
  */
 public class AstOPENTreeNode<V> extends AstPegBaseTreeNode<V> {
-	public AstOPENTreeNode(Node<?> node, String value) {
-		super(node, value);
+	public AstOPENTreeNode(String rule, String value) {
+		super(rule, value);
 	}
 
 	@Override
@@ -38,6 +36,5 @@ public class AstOPENTreeNode<V> extends AstPegBaseTreeNode<V> {
 			bodyString = checkPostponedAction(bodyString);
 			this.processStore.getTierStack().push(bodyString);
 		}
-		lastTreeNode = this;
 	}
 }

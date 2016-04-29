@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.parser.peg;
 
@@ -7,9 +7,7 @@ import java.util.Stack;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
-import org.parboiled.Node;
-import org.parboiled.Rule;
-
+import com.github.fge.grappa.rules.Rule;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JMethod;
 
@@ -19,8 +17,15 @@ import com.sun.codemodel.JMethod;
 public class AstDefinitionTreeNode<V> extends AstPegBaseTreeNode<V> {
 	private static Logger logger = Logger.getLogger(AstDefinitionTreeNode.class.getName());
 
-	public AstDefinitionTreeNode(Node<?> node, String value) {
-		super(node, value);
+	public AstDefinitionTreeNode(String rule, String value) {
+		super(rule, value);
+	}
+
+	@Override
+	protected void interpretBeforeChilds(Long id) throws ReflectiveOperationException {
+		super.interpretBeforeChilds(id);
+		this.processStore.tierOneUp(true);
+		this.openProcessStore.tierOneUp(true);
 	}
 
 	@Override
@@ -70,7 +75,7 @@ public class AstDefinitionTreeNode<V> extends AstPegBaseTreeNode<V> {
 		}
 		openStack.clear();
 		stack.clear();
-
-		lastTreeNode = this;
+		this.processStore.tierOneDown(true);
+		this.openProcessStore.tierOneDown(true);
 	}
 }
