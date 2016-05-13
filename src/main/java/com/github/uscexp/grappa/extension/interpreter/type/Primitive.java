@@ -3,6 +3,21 @@
  */
 package com.github.uscexp.grappa.extension.interpreter.type;
 
+import static com.github.uscexp.grappa.extension.interpreter.type.Comperator.EQUALS;
+import static com.github.uscexp.grappa.extension.interpreter.type.Comperator.GREATER;
+import static com.github.uscexp.grappa.extension.interpreter.type.Comperator.GREATER_EQUALS;
+import static com.github.uscexp.grappa.extension.interpreter.type.Comperator.LESSER;
+import static com.github.uscexp.grappa.extension.interpreter.type.Comperator.LESSER_EQUALS;
+import static com.github.uscexp.grappa.extension.interpreter.type.Comperator.NOT_EQUALS;
+import static com.github.uscexp.grappa.extension.interpreter.type.Operator.ADDITION;
+import static com.github.uscexp.grappa.extension.interpreter.type.Operator.BITWISE_AND;
+import static com.github.uscexp.grappa.extension.interpreter.type.Operator.BITWISE_OR;
+import static com.github.uscexp.grappa.extension.interpreter.type.Operator.BITWISE_XOR;
+import static com.github.uscexp.grappa.extension.interpreter.type.Operator.DIVISION;
+import static com.github.uscexp.grappa.extension.interpreter.type.Operator.MODULO;
+import static com.github.uscexp.grappa.extension.interpreter.type.Operator.MULTIPLICATION;
+import static com.github.uscexp.grappa.extension.interpreter.type.Operator.SUBTRACTION;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
@@ -280,25 +295,25 @@ public class Primitive {
 			primValue = ((Boolean) getValue()).booleanValue();
 			break;
 		case CHARACTER:
-			primValue = ((Character) getValue()).charValue() != 0;
+			primValue = ((Character) getValue()).charValue() > 0;
 			break;
 		case BYTE:
-			primValue = ((Byte) getValue()).shortValue() != 0;
+			primValue = ((Byte) getValue()).shortValue() > 0;
 			break;
 		case SHORT:
-			primValue = ((Short) getValue()).shortValue() != 0;
+			primValue = ((Short) getValue()).shortValue() > 0;
 			break;
 		case INTEGER:
-			primValue = ((Integer) getValue()).intValue() != 0;
+			primValue = ((Integer) getValue()).intValue() > 0;
 			break;
 		case LONG:
-			primValue = ((Long) getValue()).longValue() != 0L;
+			primValue = ((Long) getValue()).longValue() > 0L;
 			break;
 		case FLOAT:
-			primValue = ((Float) getValue()).floatValue() != 0.0D;
+			primValue = ((Float) getValue()).floatValue() > 0.0F;
 			break;
 		case DOUBLE:
-			primValue = ((Double) getValue()).doubleValue() != 0.0D;
+			primValue = ((Double) getValue()).doubleValue() > 0.0D;
 			break;
 		case STRING:
 			primValue = new Boolean((String) getValue()).booleanValue();
@@ -312,6 +327,9 @@ public class Primitive {
 	public char getCharacterValue() {
 		char primValue = ' ';
 		switch (this.typeId) {
+		case BOOLEAN:
+			primValue = getBooleanValue() ? '1' : '0';
+			break;
 		case CHARACTER:
 			primValue = ((Character) getValue()).charValue();
 			break;
@@ -331,7 +349,11 @@ public class Primitive {
 			primValue = ((String) getValue()).charAt(0);
 			break;
 		case FLOAT:
+			primValue = (char) ((Float) getValue()).intValue();
+			break;
 		case DOUBLE:
+			primValue = (char) ((Double) getValue()).intValue();
+			break;
 		default:
 			primValue = ' ';
 		}
@@ -560,7 +582,7 @@ public class Primitive {
 			this.value = Boolean.valueOf(value);
 			break;
 		case CHARACTER:
-			this.value = new Character(' ');
+			this.value = new Character((value ? '1' : '0'));
 			break;
 		case BYTE:
 			this.value = new Byte((byte) (value ? 1 : 0));
@@ -835,7 +857,7 @@ public class Primitive {
 			this.value = new Character(value.charAt(0));
 			break;
 		case BYTE:
-			this.value = new Byte(value);
+			this.value = (byte)Integer.parseInt(value);
 			break;
 		case SHORT:
 			this.value = new Short(value);
@@ -875,18 +897,60 @@ public class Primitive {
 	public void setValue(BufferedReader value) {
 		if (this.typeId == 10) {
 			this.value = value;
+		} else {
+			throw new RuntimeException(String.format("%s can't be assigned to %s of type %s",
+					value == null ? "null" : value.getClass().getSimpleName(), getClass().getSimpleName(), getPrimitiveType().getSimpleName()));
 		}
 	}
 
 	public void setValue(BufferedWriter value) {
 		if (this.typeId == 11) {
 			this.value = value;
+		} else {
+			throw new RuntimeException(String.format("%s can't be assigned to %s of type %s",
+					value == null ? "null" : value.getClass().getSimpleName(), getClass().getSimpleName(), getPrimitiveType().getSimpleName()));
 		}
 	}
 
 	public void setValue(Object value) {
 		Primitive primitive = new Primitive(value);
 		switch (primitive.getTypeId()) {
+		case BOOLEAN:
+			switch (getTypeId()) {
+			case BOOLEAN:
+				value = new Boolean(primitive.getBooleanValue());
+				break;
+			case CHARACTER:
+				value = new Character(primitive.getCharacterValue());
+				break;
+			case BYTE:
+				value = new Byte(primitive.getByteValue());
+				break;
+			case SHORT:
+				value = new Short(primitive.getShortValue());
+				break;
+			case INTEGER:
+				value = new Integer(primitive.getIntegerValue());
+				break;
+			case LONG:
+				value = new Long(primitive.getLongValue());
+				break;
+			case FLOAT:
+				value = new Float(primitive.getFloatValue());
+				break;
+			case DOUBLE:
+				value = new Double(primitive.getDoubleValue());
+				break;
+			case STRING:
+				value = String.valueOf(value);
+				break;
+			case FILE_READER:
+				value = ((BufferedReader) value);
+				break;
+			case FILE_WRITER:
+				value = ((BufferedWriter) value);
+			}
+			break;
 		case CHARACTER:
 			switch (getTypeId()) {
 			case BOOLEAN:
@@ -914,13 +978,13 @@ public class Primitive {
 				value = new Double(primitive.getDoubleValue());
 				break;
 			case STRING:
-				this.value = String.valueOf(value);
+				value = String.valueOf(value);
 				break;
 			case FILE_READER:
-				this.value = ((BufferedReader) value);
+				value = ((BufferedReader) value);
 				break;
 			case FILE_WRITER:
-				this.value = ((BufferedWriter) value);
+				value = ((BufferedWriter) value);
 			}
 			break;
 		case BYTE:
@@ -950,13 +1014,13 @@ public class Primitive {
 				value = new Double(primitive.getDoubleValue());
 				break;
 			case STRING:
-				this.value = String.valueOf(value);
+				value = String.valueOf(value);
 				break;
 			case FILE_READER:
-				this.value = ((BufferedReader) value);
+				value = ((BufferedReader) value);
 				break;
 			case FILE_WRITER:
-				this.value = ((BufferedWriter) value);
+				value = ((BufferedWriter) value);
 			}
 			break;
 		case SHORT:
@@ -986,13 +1050,13 @@ public class Primitive {
 				value = new Double(primitive.getDoubleValue());
 				break;
 			case STRING:
-				this.value = String.valueOf(value);
+				value = String.valueOf(value);
 				break;
 			case FILE_READER:
-				this.value = ((BufferedReader) value);
+				value = ((BufferedReader) value);
 				break;
 			case FILE_WRITER:
-				this.value = ((BufferedWriter) value);
+				value = ((BufferedWriter) value);
 			}
 			break;
 		case INTEGER:
@@ -1022,13 +1086,13 @@ public class Primitive {
 				value = new Double(primitive.getDoubleValue());
 				break;
 			case STRING:
-				this.value = String.valueOf(value);
+				value = String.valueOf(value);
 				break;
 			case FILE_READER:
-				this.value = ((BufferedReader) value);
+				value = ((BufferedReader) value);
 				break;
 			case FILE_WRITER:
-				this.value = ((BufferedWriter) value);
+				value = ((BufferedWriter) value);
 			}
 			break;
 		case LONG:
@@ -1058,13 +1122,13 @@ public class Primitive {
 				value = new Double(primitive.getDoubleValue());
 				break;
 			case STRING:
-				this.value = String.valueOf(value);
+				value = String.valueOf(value);
 				break;
 			case FILE_READER:
-				this.value = ((BufferedReader) value);
+				value = ((BufferedReader) value);
 				break;
 			case FILE_WRITER:
-				this.value = ((BufferedWriter) value);
+				value = ((BufferedWriter) value);
 			}
 			break;
 		case FLOAT:
@@ -1094,13 +1158,13 @@ public class Primitive {
 				value = new Double(primitive.getDoubleValue());
 				break;
 			case STRING:
-				this.value = String.valueOf(value);
+				value = String.valueOf(value);
 				break;
 			case FILE_READER:
-				this.value = ((BufferedReader) value);
+				value = ((BufferedReader) value);
 				break;
 			case FILE_WRITER:
-				this.value = ((BufferedWriter) value);
+				value = ((BufferedWriter) value);
 			}
 			break;
 		case DOUBLE:
@@ -1130,15 +1194,19 @@ public class Primitive {
 				value = new Double(primitive.getDoubleValue());
 				break;
 			case STRING:
-				this.value = String.valueOf(value);
+				value = String.valueOf(value);
 				break;
 			case FILE_READER:
-				this.value = ((BufferedReader) value);
+				value = ((BufferedReader) value);
 				break;
 			case FILE_WRITER:
-				this.value = ((BufferedWriter) value);
+				value = ((BufferedWriter) value);
 			}
 			break;
+			
+			default:
+				throw new RuntimeException(String.format("%s can't be assigned to %s of type %s",
+						value == null ? "null" : value.getClass().getSimpleName(), getClass().getSimpleName(), getPrimitiveType().getSimpleName()));
 		}
 		this.value = value;
 	}
@@ -1275,3049 +1343,189 @@ public class Primitive {
 		return objects;
 	}
 
+	@Override
 	public String toString() {
 		return this.value.toString();
 	}
 
+	@Override
 	public int hashCode() {
 		return this.value.hashCode();
 	}
 
+	public Primitive equalsObject(Object obj) {
+		return new Primitive(Boolean.TYPE, equals(obj));
+	}
+	
+	@Override
 	public boolean equals(Object obj) {
-		Object objValue = null;
-		if (!(obj instanceof Primitive)) {
-			obj = new Primitive(obj);
-		}
-		objValue = ((Primitive) obj).getValue();
-		Primitive primitive = null;
+		return compare(EQUALS, obj);
+	}
+	
+	public boolean compare(Comperator comperator, Object obj) {
+		Primitive check = getPrimitive(obj);
 		boolean result = false;
-		switch (this.typeId) {
+		switch (getTypeId()) {
+		case BOOLEAN:
+			result = comperator.apply(getBooleanValue(), check.getBooleanValue());
+			break;
 		case CHARACTER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() > 0 == ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() == ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, (byte) ((Character) this.value).charValue() == ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, (short) ((Character) this.value).charValue() == ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() == ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() == ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() == ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() == ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).toString().equals(objValue));
-			}
+			result = comperator.apply(getCharacterValue(), check.getCharacterValue());
 			break;
 		case BYTE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).byteValue() > 0 == ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, (char) ((Byte) this.value).byteValue() == ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).byteValue() == ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).shortValue() == ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).intValue() == ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).longValue() == ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).floatValue() == ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).doubleValue() == ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).toString().equals(objValue));
-			}
+			result = comperator.apply(getByteValue(), check.getByteValue());
 			break;
 		case SHORT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).shortValue() > 0 == ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).shortValue() == ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).shortValue() == ((Byte) objValue).shortValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).shortValue() == ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).intValue() == ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).longValue() == ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).floatValue() == ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).doubleValue() == ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).toString().equals(objValue));
-			}
+			result = comperator.apply(getShortValue(), check.getShortValue());
 			break;
 		case INTEGER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() > 0 == ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() == ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() == ((Byte) objValue).intValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() == ((Short) objValue).intValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() == ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).longValue() == ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).floatValue() == ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).doubleValue() == ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).toString().equals(objValue));
-			}
+			result = comperator.apply(getIntegerValue(), check.getIntegerValue());
 			break;
 		case LONG:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() > 0L == ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() == ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() == ((Byte) objValue).longValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() == ((Short) objValue).longValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() == ((Integer) objValue).longValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() == ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).floatValue() == ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).doubleValue() == ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).toString().equals(objValue));
-			}
+			result = comperator.apply(getLongValue(), check.getLongValue());
 			break;
 		case FLOAT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() > 0.0F == ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() == ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() == ((Byte) objValue).floatValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() == ((Short) objValue).floatValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() == ((Integer) objValue).floatValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() == ((Long) objValue).floatValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() == ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).doubleValue() == ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).toString().equals(objValue));
-			}
+			result = comperator.apply(getFloatValue(), check.getFloatValue());
 			break;
 		case DOUBLE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() > 0.0D == ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() == ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() == ((Byte) objValue).doubleValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() == ((Short) objValue).doubleValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() == ((Integer) objValue).doubleValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() == ((Long) objValue).doubleValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() == ((Float) objValue).doubleValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() == ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).toString().equals(objValue));
-			}
+			result = comperator.apply(getDoubleValue(), check.getDoubleValue());
+			break;
+		case STRING:
+			result = comperator.apply(toString(), (String)check.getValue());
 			break;
 		default:
-			result = this.value.equals(objValue);
-			primitive = new Primitive(Boolean.TYPE, result);
+			throw new RuntimeException(String.format("%s for %s is not allowed!", comperator.toString(), getPrimitiveType()));
 		}
-		result = primitive.getBooleanValue();
 		return result;
 	}
-
-	public boolean notEquals(Object obj) {
-		return !equals(obj);
+	
+	public Primitive notEquals(Object obj) {
+		return new Primitive(Boolean.TYPE, compare(NOT_EQUALS, obj));
 	}
 
 	public Primitive bitwiseAnd(Object obj) {
-		Object objValue = null;
+		return calculate(BITWISE_AND, obj);
+	}
+
+	private Primitive getPrimitive(Object obj) {
 		if (!(obj instanceof Primitive)) {
 			obj = new Primitive(obj);
 		}
-		objValue = ((Primitive) obj).getValue();
+		return (Primitive)obj;
+	}
+
+	public Primitive bitwiseComplement() {
 		Primitive primitive = null;
 		switch (this.typeId) {
 		case BOOLEAN:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Boolean) this.value).booleanValue() & ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, (((Boolean) this.value).booleanValue() ? 'y' : 'n') & ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, (byte) (((Boolean) this.value).booleanValue() ? 1 : 0) & ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, (short) (((Boolean) this.value).booleanValue() ? 1 : 0) & ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, (((Boolean) this.value).booleanValue() ? 1 : 0) & ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, (((Boolean) this.value).booleanValue() ? 1 : 0) & ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, (((Boolean) this.value).booleanValue() ? 1 : 0) & ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, (((Boolean) this.value).booleanValue() ? 1 : 0) & ((Double) objValue).longValue());
-			}
+			primitive = new Primitive(~getByteValue());
 			break;
 		case CHARACTER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() > 0 & ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, ((Character) this.value).charValue() & ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, (byte) ((Character) this.value).charValue() & ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, (short) ((Character) this.value).charValue() & ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Character) this.value).charValue() & ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Character) this.value).charValue() & ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, ((Character) this.value).charValue() & ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, ((Character) this.value).charValue() & ((Double) objValue).longValue());
-			}
+			primitive = new Primitive(~getCharacterValue());
 			break;
 		case BYTE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).byteValue() > 0 & ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, (char) ((Byte) this.value).byteValue() & ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, ((Byte) this.value).byteValue() & ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, ((Byte) this.value).shortValue() & ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Byte) this.value).intValue() & ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Byte) this.value).longValue() & ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, ((Byte) this.value).longValue() & ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, ((Byte) this.value).longValue() & ((Double) objValue).longValue());
-			}
+			primitive = new Primitive(~getByteValue());
 			break;
 		case SHORT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).shortValue() > 0 & ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() & ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() & ((Byte) objValue).shortValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() & ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Short) this.value).intValue() & ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Short) this.value).longValue() & ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, ((Short) this.value).longValue() & ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, ((Short) this.value).longValue() & ((Double) objValue).longValue());
-			}
+			primitive = new Primitive(~getShortValue());
 			break;
 		case INTEGER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).shortValue() > 0 & ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() & ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() & ((Byte) objValue).intValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() & ((Short) objValue).intValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() & ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Integer) this.value).longValue() & ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, ((Integer) this.value).longValue() & ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, ((Integer) this.value).longValue() & ((Double) objValue).longValue());
-			}
+			primitive = new Primitive(~getIntegerValue());
 			break;
 		case LONG:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).shortValue() > 0 & ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() & ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() & ((Byte) objValue).longValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() & ((Short) objValue).longValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() & ((Integer) objValue).longValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() & ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() & ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() & ((Double) objValue).longValue());
-			}
+			primitive = new Primitive(~getLongValue());
 			break;
 		case FLOAT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).shortValue() > 0 & ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, (char) ((Float) this.value).byteValue() & ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, ((Float) this.value).byteValue() & ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, ((Float) this.value).shortValue() & ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Float) this.value).intValue() & ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Float) this.value).longValue() & ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, ((Float) this.value).longValue() & ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, ((Float) this.value).longValue() & ((Double) objValue).longValue());
-			}
+			primitive = new Primitive(~getLongValue());
 			break;
 		case DOUBLE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).shortValue() > 0 & ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, (char) ((Double) this.value).byteValue() & ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, ((Double) this.value).byteValue() & ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, ((Double) this.value).shortValue() & ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Double) this.value).intValue() & ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Double) this.value).longValue() & ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, ((Double) this.value).longValue() & ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, ((Double) this.value).longValue() & ((Double) objValue).longValue());
-			}
+			primitive = new Primitive(~getLongValue());
 			break;
+		default:
+			throw new RuntimeException(String.format("%s for %s is not allowed!", "~", getPrimitiveType()));
 		}
 		return primitive;
 	}
 
-	public Primitive bitwiseCompl() {
+	public Primitive calculate(Operator operator, Object obj) {
+		Primitive check = getPrimitive(obj);
 		Primitive primitive = null;
 		switch (this.typeId) {
 		case BOOLEAN:
-			primitive = new Primitive(Integer.TYPE, ~(((Boolean) this.value).booleanValue() ? 1 : 2));
+			primitive = new Primitive(operator.apply(getBooleanValue(), check.getBooleanValue()));
 			break;
 		case CHARACTER:
-			primitive = new Primitive(Character.TYPE, ~((Character) this.value).charValue());
+			primitive = new Primitive(operator.apply(getCharacterValue(), check.getCharacterValue()));
 			break;
 		case BYTE:
-			primitive = new Primitive(Byte.TYPE, ~((Byte) this.value).byteValue());
+			primitive = new Primitive(operator.apply(getByteValue(), check.getByteValue()));
 			break;
 		case SHORT:
-			primitive = new Primitive(Short.TYPE, ~((Short) this.value).shortValue());
+			primitive = new Primitive(operator.apply(getShortValue(), check.getShortValue()));
 			break;
 		case INTEGER:
-			primitive = new Primitive(Integer.TYPE, ~((Integer) this.value).intValue());
+			primitive = new Primitive(operator.apply(getIntegerValue(), check.getIntegerValue()));
 			break;
 		case LONG:
-			primitive = new Primitive(Long.TYPE, ~((Long) this.value).longValue());
+			primitive = new Primitive(operator.apply(getLongValue(), check.getLongValue()));
 			break;
 		case FLOAT:
-			primitive = new Primitive(Long.TYPE, ~((Float) this.value).longValue());
+			primitive = new Primitive(operator.apply(getFloatValue(), check.getFloatValue()));
 			break;
 		case DOUBLE:
-			primitive = new Primitive(Long.TYPE, ~((Double) this.value).longValue());
+			primitive = new Primitive(operator.apply(getDoubleValue(), check.getDoubleValue()));
+			break;
+		case STRING:
+			primitive = new Primitive(operator.apply((String)getValue(), (String)check.getValue()));
+			break;
+		default:
+			throw new RuntimeException(String.format("%s for %s is not allowed!", operator.toString(), getPrimitiveType()));
 		}
 		return primitive;
 	}
 
 	public Primitive bitwiseOr(Object obj) {
-		Object objValue = null;
-		if (!(obj instanceof Primitive)) {
-			obj = new Primitive(obj);
-		}
-		objValue = ((Primitive) obj).getValue();
-		Primitive primitive = null;
-		switch (this.typeId) {
-		case BOOLEAN:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Boolean) this.value).booleanValue() | ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, (((Boolean) this.value).booleanValue() ? 'y' : 'n') | ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, (byte) (((Boolean) this.value).booleanValue() ? 1 : 0) | ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, (short) (((Boolean) this.value).booleanValue() ? 1 : 0) | ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, (((Boolean) this.value).booleanValue() ? 1 : 0) | ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, (((Boolean) this.value).booleanValue() ? 1 : 0) | ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, (((Boolean) this.value).booleanValue() ? 1 : 0) | ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, (((Boolean) this.value).booleanValue() ? 1 : 0) | ((Double) objValue).longValue());
-			}
-			break;
-		case CHARACTER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() > 0 | ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, ((Character) this.value).charValue() | ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, (byte) ((Character) this.value).charValue() | ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, (short) ((Character) this.value).charValue() | ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Character) this.value).charValue() | ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Character) this.value).charValue() | ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, ((Character) this.value).charValue() | ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, ((Character) this.value).charValue() | ((Double) objValue).longValue());
-			}
-			break;
-		case BYTE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).byteValue() > 0 | ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, (char) ((Byte) this.value).byteValue() | ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, ((Byte) this.value).byteValue() | ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, ((Byte) this.value).shortValue() | ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Byte) this.value).intValue() | ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Byte) this.value).longValue() | ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, ((Byte) this.value).longValue() | ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, ((Byte) this.value).longValue() | ((Double) objValue).longValue());
-			}
-			break;
-		case SHORT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).shortValue() > 0 | ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() | ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() | ((Byte) objValue).shortValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() | ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Short) this.value).intValue() | ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Short) this.value).longValue() | ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, ((Short) this.value).longValue() | ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, ((Short) this.value).longValue() | ((Double) objValue).longValue());
-			}
-			break;
-		case INTEGER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).shortValue() > 0 | ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() | ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() | ((Byte) objValue).intValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() | ((Short) objValue).intValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() | ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Integer) this.value).longValue() | ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, ((Integer) this.value).longValue() | ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, ((Integer) this.value).longValue() | ((Double) objValue).longValue());
-			}
-			break;
-		case LONG:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).shortValue() > 0 | ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() | ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() | ((Byte) objValue).longValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() | ((Short) objValue).longValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() | ((Integer) objValue).longValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() | ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() | ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() | ((Double) objValue).longValue());
-			}
-			break;
-		case FLOAT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).shortValue() > 0 | ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, (char) ((Float) this.value).byteValue() | ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, ((Float) this.value).byteValue() | ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, ((Float) this.value).shortValue() | ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Float) this.value).intValue() | ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Float) this.value).longValue() | ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, ((Float) this.value).longValue() | ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, ((Float) this.value).longValue() | ((Double) objValue).longValue());
-			}
-			break;
-		case DOUBLE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).shortValue() > 0 | ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, (char) ((Double) this.value).byteValue() | ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, ((Double) this.value).byteValue() | ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, ((Double) this.value).shortValue() | ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Double) this.value).intValue() | ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Double) this.value).longValue() | ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, ((Double) this.value).longValue() | ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, ((Double) this.value).longValue() | ((Double) objValue).longValue());
-			}
-			break;
-		}
-		return primitive;
+		return calculate(BITWISE_OR, obj);
 	}
 
 	public Primitive bitwiseXor(Object obj) {
-		Object objValue = null;
-		if (!(obj instanceof Primitive)) {
-			obj = new Primitive(obj);
-		}
-		objValue = ((Primitive) obj).getValue();
-		Primitive primitive = null;
-		switch (this.typeId) {
-		case BOOLEAN:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Boolean) this.value).booleanValue() ^ ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, (((Boolean) this.value).booleanValue() ? 'y' : 'n') ^ ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, (byte) (((Boolean) this.value).booleanValue() ? 1 : 0) ^ ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, (short) (((Boolean) this.value).booleanValue() ? 1 : 0) ^ ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, (((Boolean) this.value).booleanValue() ? 1 : 0) ^ ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, (((Boolean) this.value).booleanValue() ? 1 : 0) ^ ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, (((Boolean) this.value).booleanValue() ? 1 : 0) ^ ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, (((Boolean) this.value).booleanValue() ? 1 : 0) ^ ((Double) objValue).longValue());
-			}
-			break;
-		case CHARACTER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() > 0 ^ ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, ((Character) this.value).charValue() ^ ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, (byte) ((Character) this.value).charValue() ^ ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, (short) ((Character) this.value).charValue() ^ ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Character) this.value).charValue() ^ ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Character) this.value).charValue() ^ ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, ((Character) this.value).charValue() ^ ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, ((Character) this.value).charValue() ^ ((Double) objValue).longValue());
-			}
-			break;
-		case BYTE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).byteValue() > 0 ^ ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, (char) ((Byte) this.value).byteValue() ^ ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, ((Byte) this.value).byteValue() ^ ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, ((Byte) this.value).shortValue() ^ ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Byte) this.value).intValue() ^ ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Byte) this.value).longValue() ^ ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, ((Byte) this.value).longValue() ^ ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, ((Byte) this.value).longValue() ^ ((Double) objValue).longValue());
-			}
-			break;
-		case SHORT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).shortValue() > 0 ^ ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() ^ ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() ^ ((Byte) objValue).shortValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() ^ ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Short) this.value).intValue() ^ ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Short) this.value).longValue() ^ ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, ((Short) this.value).longValue() ^ ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, ((Short) this.value).longValue() ^ ((Double) objValue).longValue());
-			}
-			break;
-		case INTEGER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).shortValue() > 0 ^ ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() ^ ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() ^ ((Byte) objValue).intValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() ^ ((Short) objValue).intValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() ^ ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Integer) this.value).longValue() ^ ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, ((Integer) this.value).longValue() ^ ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, ((Integer) this.value).longValue() ^ ((Double) objValue).longValue());
-			}
-			break;
-		case LONG:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).shortValue() > 0 ^ ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() ^ ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() ^ ((Byte) objValue).longValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() ^ ((Short) objValue).longValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() ^ ((Integer) objValue).longValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() ^ ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() ^ ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() ^ ((Double) objValue).longValue());
-			}
-			break;
-		case FLOAT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).shortValue() > 0 ^ ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, (char) ((Float) this.value).byteValue() ^ ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, ((Float) this.value).byteValue() ^ ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, ((Float) this.value).shortValue() ^ ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Float) this.value).intValue() ^ ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Float) this.value).longValue() ^ ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, ((Float) this.value).longValue() ^ ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, ((Float) this.value).longValue() ^ ((Double) objValue).longValue());
-			}
-			break;
-		case DOUBLE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).shortValue() > 0 ^ ((Boolean) objValue).booleanValue());
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, (char) ((Double) this.value).byteValue() ^ ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, ((Double) this.value).byteValue() ^ ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, ((Double) this.value).shortValue() ^ ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Double) this.value).intValue() ^ ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Double) this.value).longValue() ^ ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Long.TYPE, ((Double) this.value).longValue() ^ ((Float) objValue).longValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Long.TYPE, ((Double) this.value).longValue() ^ ((Double) objValue).longValue());
-			}
-			break;
-		}
-		return primitive;
+		return calculate(BITWISE_XOR, obj);
 	}
 
-	public Primitive div(Object obj) {
-		Object objValue = null;
-		if (!(obj instanceof Primitive)) {
-			obj = new Primitive(obj);
-		}
-		objValue = ((Primitive) obj).getValue();
-		Primitive primitive = null;
-		switch (this.typeId) {
-		case BOOLEAN:
-			primitive = null;
-			break;
-		case CHARACTER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, ((Character) this.value).charValue() / ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, (byte) ((Character) this.value).charValue() / ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, (short) ((Character) this.value).charValue() / ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Character) this.value).charValue() / ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Character) this.value).charValue() / ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Character) this.value).charValue() / ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Character) this.value).charValue() / ((Double) objValue).doubleValue());
-			}
-			break;
-		case BYTE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, (char) ((Byte) this.value).byteValue() / ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, ((Byte) this.value).byteValue() / ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, ((Byte) this.value).shortValue() / ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Byte) this.value).intValue() / ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Byte) this.value).longValue() / ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Byte) this.value).floatValue() / ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Byte) this.value).doubleValue() / ((Double) objValue).doubleValue());
-			}
-			break;
-		case SHORT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() / ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() / ((Byte) objValue).shortValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() / ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Short) this.value).intValue() / ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Short) this.value).longValue() / ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Short) this.value).floatValue() / ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Short) this.value).doubleValue() / ((Double) objValue).doubleValue());
-			}
-			break;
-		case INTEGER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() / ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() / ((Byte) objValue).intValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() / ((Short) objValue).intValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() / ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Integer) this.value).longValue() / ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Integer) this.value).floatValue() / ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Integer) this.value).doubleValue() / ((Double) objValue).doubleValue());
-			}
-			break;
-		case LONG:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() / ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() / ((Byte) objValue).longValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() / ((Short) objValue).longValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() / ((Integer) objValue).longValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() / ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Long) this.value).floatValue() / ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Long) this.value).doubleValue() / ((Double) objValue).doubleValue());
-			}
-			break;
-		case FLOAT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() / ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() / ((Byte) objValue).floatValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() / ((Short) objValue).floatValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() / ((Integer) objValue).floatValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() / ((Long) objValue).floatValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() / ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Float) this.value).doubleValue() / ((Double) objValue).doubleValue());
-			}
-			break;
-		case DOUBLE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() / ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() / ((Byte) objValue).doubleValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() / ((Short) objValue).doubleValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() / ((Integer) objValue).doubleValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() / ((Long) objValue).doubleValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() / ((Float) objValue).doubleValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() / ((Double) objValue).doubleValue());
-			}
-			break;
-		}
-		return primitive;
+	public Primitive divide(Object obj) {
+		return calculate(DIVISION, obj);
 	}
 
 	public Primitive greaterEqual(Object obj) {
-		Object objValue = null;
-		if (!(obj instanceof Primitive)) {
-			obj = new Primitive(obj);
-		}
-		objValue = ((Primitive) obj).getValue();
-		Primitive primitive = null;
-		switch (this.typeId) {
-		case BOOLEAN:
-			primitive = null;
-			break;
-		case CHARACTER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() >= ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, (byte) ((Character) this.value).charValue() >= ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, (short) ((Character) this.value).charValue() >= ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() >= ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() >= ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() >= ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() >= ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).toString().compareTo((String) objValue) >= 0);
-			}
-			break;
-		case BYTE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, (char) ((Byte) this.value).byteValue() >= ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).byteValue() >= ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).shortValue() >= ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).intValue() >= ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).longValue() >= ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).floatValue() >= ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).doubleValue() >= ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).byteValue() >= new Byte((String) objValue).byteValue());
-			}
-			break;
-		case SHORT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).shortValue() >= ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).shortValue() >= ((Byte) objValue).shortValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).shortValue() >= ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).intValue() >= ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).longValue() >= ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).floatValue() >= ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).doubleValue() >= ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).shortValue() >= new Short((String) objValue).shortValue());
-			}
-			break;
-		case INTEGER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() >= ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() >= ((Byte) objValue).intValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() >= ((Short) objValue).intValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() >= ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).longValue() >= ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).floatValue() >= ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).doubleValue() >= ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() >= new Integer((String) objValue).intValue());
-			}
-			break;
-		case LONG:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() >= ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() >= ((Byte) objValue).longValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() >= ((Short) objValue).longValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() >= ((Integer) objValue).longValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() >= ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).floatValue() >= ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).doubleValue() >= ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() >= new Long((String) objValue).longValue());
-			}
-			break;
-		case FLOAT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() >= ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() >= ((Byte) objValue).floatValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() >= ((Short) objValue).floatValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() >= ((Integer) objValue).floatValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() >= ((Long) objValue).floatValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() >= ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).doubleValue() >= ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() >= new Float((String) objValue).floatValue());
-			}
-			break;
-		case DOUBLE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() >= ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() >= ((Byte) objValue).doubleValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() >= ((Short) objValue).doubleValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() >= ((Integer) objValue).doubleValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() >= ((Long) objValue).doubleValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() >= ((Float) objValue).doubleValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() >= ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() >= new Double((String) objValue).doubleValue());
-			}
-			break;
-		case STRING:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Character) objValue).toString()) >= 0);
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Byte) objValue).toString()) >= 0);
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Short) objValue).toString()) >= 0);
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Integer) objValue).toString()) >= 0);
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Long) objValue).toString()) >= 0);
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Float) objValue).toString()) >= 0);
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Double) objValue).toString()) >= 0);
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo((String) objValue) >= 0);
-			}
-			break;
-		}
-		return primitive;
+		return new Primitive(Boolean.TYPE, compare(GREATER_EQUALS, obj));
 	}
 
 	public Primitive greaterThan(Object obj) {
-		Object objValue = null;
-		if (!(obj instanceof Primitive)) {
-			obj = new Primitive(obj);
-		}
-		objValue = ((Primitive) obj).getValue();
-		Primitive primitive = null;
-		switch (this.typeId) {
-		case BOOLEAN:
-			primitive = null;
-			break;
-		case CHARACTER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() > ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, (byte) ((Character) this.value).charValue() > ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, (short) ((Character) this.value).charValue() > ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() > ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() > ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() > ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() > ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).toString().compareTo((String) objValue) > 0);
-			}
-			break;
-		case BYTE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, (char) ((Byte) this.value).byteValue() > ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).byteValue() > ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).shortValue() > ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).intValue() > ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).longValue() > ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).floatValue() > ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).doubleValue() > ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).byteValue() > new Byte((String) objValue).byteValue());
-			}
-			break;
-		case SHORT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).shortValue() > ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).shortValue() > ((Byte) objValue).shortValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).shortValue() > ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).intValue() > ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).longValue() > ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).floatValue() > ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).doubleValue() > ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).shortValue() > new Short((String) objValue).shortValue());
-			}
-			break;
-		case INTEGER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() > ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() > ((Byte) objValue).intValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() > ((Short) objValue).intValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() > ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).longValue() > ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).floatValue() > ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).doubleValue() > ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() > new Integer((String) objValue).intValue());
-			}
-			break;
-		case LONG:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() > ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() > ((Byte) objValue).longValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() > ((Short) objValue).longValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() > ((Integer) objValue).longValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() > ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).floatValue() > ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).doubleValue() > ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() > new Long((String) objValue).longValue());
-			}
-			break;
-		case FLOAT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() > ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() > ((Byte) objValue).floatValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() > ((Short) objValue).floatValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() > ((Integer) objValue).floatValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() > ((Long) objValue).floatValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() > ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).doubleValue() > ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() > new Float((String) objValue).floatValue());
-			}
-			break;
-		case DOUBLE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() > ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() > ((Byte) objValue).doubleValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() > ((Short) objValue).doubleValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() > ((Integer) objValue).doubleValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() > ((Long) objValue).doubleValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() > ((Float) objValue).doubleValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() > ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() > new Double((String) objValue).doubleValue());
-			}
-			break;
-		case STRING:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Character) objValue).toString()) > 0);
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Byte) objValue).toString()) > 0);
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Short) objValue).toString()) > 0);
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Integer) objValue).toString()) > 0);
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Long) objValue).toString()) > 0);
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Float) objValue).toString()) > 0);
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Double) objValue).toString()) > 0);
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo((String) objValue) > 0);
-			}
-			break;
-		}
-		return primitive;
+		return new Primitive(Boolean.TYPE, compare(GREATER, obj));
 	}
 
 	public Primitive lesserEqual(Object obj) {
-		Object objValue = null;
-		if (!(obj instanceof Primitive)) {
-			obj = new Primitive(obj);
-		}
-		objValue = ((Primitive) obj).getValue();
-		Primitive primitive = null;
-		switch (this.typeId) {
-		case BOOLEAN:
-			primitive = null;
-			break;
-		case CHARACTER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() <= ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, (byte) ((Character) this.value).charValue() <= ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, (short) ((Character) this.value).charValue() <= ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() <= ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() <= ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() <= ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() <= ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).toString().compareTo((String) objValue) <= 0);
-			}
-			break;
-		case BYTE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, (char) ((Byte) this.value).byteValue() <= ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).byteValue() <= ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).shortValue() <= ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).intValue() <= ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).longValue() <= ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).floatValue() <= ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).doubleValue() <= ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).byteValue() <= new Byte((String) objValue).byteValue());
-			}
-			break;
-		case SHORT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).shortValue() <= ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).shortValue() <= ((Byte) objValue).shortValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).shortValue() <= ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).intValue() <= ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).longValue() <= ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).floatValue() <= ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).doubleValue() <= ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).shortValue() <= new Short((String) objValue).shortValue());
-			}
-			break;
-		case INTEGER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() <= ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() <= ((Byte) objValue).intValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() <= ((Short) objValue).intValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() <= ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).longValue() <= ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).floatValue() <= ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).doubleValue() <= ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() <= new Integer((String) objValue).intValue());
-			}
-			break;
-		case LONG:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() <= ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() <= ((Byte) objValue).longValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() <= ((Short) objValue).longValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() <= ((Integer) objValue).longValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() <= ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).floatValue() <= ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).doubleValue() <= ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() <= new Long((String) objValue).longValue());
-			}
-			break;
-		case FLOAT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() <= ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() <= ((Byte) objValue).floatValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() <= ((Short) objValue).floatValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() <= ((Integer) objValue).floatValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() <= ((Long) objValue).floatValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() <= ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).doubleValue() <= ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() <= new Float((String) objValue).floatValue());
-			}
-			break;
-		case DOUBLE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() <= ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() <= ((Byte) objValue).doubleValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() <= ((Short) objValue).doubleValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() <= ((Integer) objValue).doubleValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() <= ((Long) objValue).doubleValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() <= ((Float) objValue).doubleValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() <= ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() <= new Double((String) objValue).doubleValue());
-			}
-			break;
-		case STRING:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Character) objValue).toString()) <= 0);
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Byte) objValue).toString()) <= 0);
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Short) objValue).toString()) <= 0);
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Integer) objValue).toString()) <= 0);
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Long) objValue).toString()) <= 0);
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Float) objValue).toString()) <= 0);
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Double) objValue).toString()) <= 0);
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo((String) objValue) <= 0);
-			}
-			break;
-		}
-		return primitive;
+		return new Primitive(Boolean.TYPE, compare(LESSER_EQUALS, obj));
 	}
 
 	public Primitive lesserThan(Object obj) {
-		Object objValue = null;
-		if (!(obj instanceof Primitive)) {
-			obj = new Primitive(obj);
-		}
-		objValue = ((Primitive) obj).getValue();
-		Primitive primitive = null;
-		switch (this.typeId) {
-		case BOOLEAN:
-			primitive = null;
-			break;
-		case CHARACTER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() < ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, (byte) ((Character) this.value).charValue() < ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, (short) ((Character) this.value).charValue() < ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() < ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() < ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() < ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).charValue() < ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Character) this.value).toString().compareTo((String) objValue) < 0);
-			}
-			break;
-		case BYTE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, (char) ((Byte) this.value).byteValue() < ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).byteValue() < ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).shortValue() < ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).intValue() < ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).longValue() < ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).floatValue() < ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).doubleValue() < ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Byte) this.value).byteValue() < new Byte((String) objValue).byteValue());
-			}
-			break;
-		case SHORT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).shortValue() < ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).shortValue() < ((Byte) objValue).shortValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).shortValue() < ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).intValue() < ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).longValue() < ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).floatValue() < ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).doubleValue() < ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Short) this.value).shortValue() < new Short((String) objValue).shortValue());
-			}
-			break;
-		case INTEGER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() < ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() < ((Byte) objValue).intValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() < ((Short) objValue).intValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() < ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).longValue() < ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).floatValue() < ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).doubleValue() < ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Integer) this.value).intValue() < new Integer((String) objValue).intValue());
-			}
-			break;
-		case LONG:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() < ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() < ((Byte) objValue).longValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() < ((Short) objValue).longValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() < ((Integer) objValue).longValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() < ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).floatValue() < ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).doubleValue() < ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Long) this.value).longValue() < new Long((String) objValue).longValue());
-			}
-			break;
-		case FLOAT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() < ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() < ((Byte) objValue).floatValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() < ((Short) objValue).floatValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() < ((Integer) objValue).floatValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() < ((Long) objValue).floatValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() < ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).doubleValue() < ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Float) this.value).floatValue() < new Float((String) objValue).floatValue());
-			}
-			break;
-		case DOUBLE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() < ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() < ((Byte) objValue).doubleValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() < ((Short) objValue).doubleValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() < ((Integer) objValue).doubleValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() < ((Long) objValue).doubleValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() < ((Float) objValue).doubleValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() < ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((Double) this.value).doubleValue() < new Double((String) objValue).doubleValue());
-			}
-			break;
-		case STRING:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Character) objValue).toString()) < 0);
-				break;
-			case BYTE:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Byte) objValue).toString()) < 0);
-				break;
-			case SHORT:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Short) objValue).toString()) < 0);
-				break;
-			case INTEGER:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Integer) objValue).toString()) < 0);
-				break;
-			case LONG:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Long) objValue).toString()) < 0);
-				break;
-			case FLOAT:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Float) objValue).toString()) < 0);
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo(((Double) objValue).toString()) < 0);
-				break;
-			case STRING:
-				primitive = new Primitive(Boolean.TYPE, ((String) this.value).compareTo((String) objValue) < 0);
-			}
-			break;
-		}
-		return primitive;
+		return new Primitive(Boolean.TYPE, compare(LESSER, obj));
 	}
 
 	public Primitive mod(Object obj) {
-		Object objValue = null;
-		if (!(obj instanceof Primitive)) {
-			obj = new Primitive(obj);
-		}
-		objValue = ((Primitive) obj).getValue();
-		Primitive primitive = null;
-		switch (this.typeId) {
-		case BOOLEAN:
-			primitive = null;
-			break;
-		case CHARACTER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, ((Character) this.value).charValue() % ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, (byte) ((Character) this.value).charValue() % ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, (short) ((Character) this.value).charValue() % ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Character) this.value).charValue() % ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Character) this.value).charValue() % ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Character) this.value).charValue() % ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Character) this.value).charValue() % ((Double) objValue).doubleValue());
-			}
-			break;
-		case BYTE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, (char) ((Byte) this.value).byteValue() % ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, ((Byte) this.value).byteValue() % ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, ((Byte) this.value).shortValue() % ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Byte) this.value).intValue() % ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Byte) this.value).longValue() % ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Byte) this.value).floatValue() % ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Byte) this.value).doubleValue() % ((Double) objValue).doubleValue());
-			}
-			break;
-		case SHORT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() % ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() % ((Byte) objValue).shortValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() % ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Short) this.value).intValue() % ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Short) this.value).longValue() % ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Short) this.value).floatValue() % ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Short) this.value).doubleValue() % ((Double) objValue).doubleValue());
-			}
-			break;
-		case INTEGER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() % ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() % ((Byte) objValue).intValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() % ((Short) objValue).intValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() % ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Integer) this.value).longValue() % ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Integer) this.value).floatValue() % ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Integer) this.value).doubleValue() % ((Double) objValue).doubleValue());
-			}
-			break;
-		case LONG:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() % ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() % ((Byte) objValue).longValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() % ((Short) objValue).longValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() % ((Integer) objValue).longValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() % ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Long) this.value).floatValue() % ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Long) this.value).doubleValue() % ((Double) objValue).doubleValue());
-			}
-			break;
-		case FLOAT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() % ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() % ((Byte) objValue).floatValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() % ((Short) objValue).floatValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() % ((Integer) objValue).floatValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() % ((Long) objValue).floatValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() % ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Float) this.value).doubleValue() % ((Double) objValue).doubleValue());
-			}
-			break;
-		case DOUBLE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() % ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() % ((Byte) objValue).doubleValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() % ((Short) objValue).doubleValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() % ((Integer) objValue).doubleValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() % ((Long) objValue).doubleValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() % ((Float) objValue).doubleValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() % ((Double) objValue).doubleValue());
-			}
-			break;
-		}
-		return primitive;
+		return calculate(MODULO, obj);
 	}
 
-	public Primitive mult(Object obj) {
-		Object objValue = null;
-		if (!(obj instanceof Primitive)) {
-			obj = new Primitive(obj);
-		}
-		objValue = ((Primitive) obj).getValue();
-		Primitive primitive = null;
-		switch (this.typeId) {
-		case BOOLEAN:
-			primitive = null;
-			break;
-		case CHARACTER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, ((Character) this.value).charValue() * ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, (byte) ((Character) this.value).charValue() * ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, (short) ((Character) this.value).charValue() * ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Character) this.value).charValue() * ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Character) this.value).charValue() * ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Character) this.value).charValue() * ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Character) this.value).charValue() * ((Double) objValue).doubleValue());
-			}
-			break;
-		case BYTE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, (char) ((Byte) this.value).byteValue() * ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, ((Byte) this.value).byteValue() * ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, ((Byte) this.value).shortValue() * ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Byte) this.value).intValue() * ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Byte) this.value).longValue() * ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Byte) this.value).floatValue() * ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Byte) this.value).doubleValue() * ((Double) objValue).doubleValue());
-			}
-			break;
-		case SHORT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() * ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() * ((Byte) objValue).shortValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() * ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Short) this.value).intValue() * ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Short) this.value).longValue() * ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Short) this.value).floatValue() * ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Short) this.value).doubleValue() * ((Double) objValue).doubleValue());
-			}
-			break;
-		case INTEGER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() * ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() * ((Byte) objValue).intValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() * ((Short) objValue).intValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() * ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Integer) this.value).longValue() * ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Integer) this.value).floatValue() * ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Integer) this.value).doubleValue() * ((Double) objValue).doubleValue());
-			}
-			break;
-		case LONG:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() * ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() * ((Byte) objValue).longValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() * ((Short) objValue).longValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() * ((Integer) objValue).longValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() * ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Long) this.value).floatValue() * ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Long) this.value).doubleValue() * ((Double) objValue).doubleValue());
-			}
-			break;
-		case FLOAT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() * ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() * ((Byte) objValue).floatValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() * ((Short) objValue).floatValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() * ((Integer) objValue).floatValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() * ((Long) objValue).floatValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() * ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Float) this.value).doubleValue() * ((Double) objValue).doubleValue());
-			}
-			break;
-		case DOUBLE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() * ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() * ((Byte) objValue).doubleValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() * ((Short) objValue).doubleValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() * ((Integer) objValue).doubleValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() * ((Long) objValue).doubleValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() * ((Float) objValue).doubleValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() * ((Double) objValue).doubleValue());
-			}
-			break;
-		}
-		return primitive;
+	public Primitive multiplicate(Object obj) {
+		return calculate(MULTIPLICATION, obj);
 	}
 
 	public Primitive substract(Object obj) {
-		Object objValue = null;
-		if (!(obj instanceof Primitive)) {
-			obj = new Primitive(obj);
-		}
-		objValue = ((Primitive) obj).getValue();
-		Primitive primitive = null;
-		switch (this.typeId) {
-		case BOOLEAN:
-			primitive = null;
-			break;
-		case CHARACTER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, ((Character) this.value).charValue() - ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, (byte) ((Character) this.value).charValue() - ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, (short) ((Character) this.value).charValue() - ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Character) this.value).charValue() - ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Character) this.value).charValue() - ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Character) this.value).charValue() - ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Character) this.value).charValue() - ((Double) objValue).doubleValue());
-			}
-			break;
-		case BYTE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, (char) ((Byte) this.value).byteValue() - ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, ((Byte) this.value).byteValue() - ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, ((Byte) this.value).shortValue() - ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Byte) this.value).intValue() - ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Byte) this.value).longValue() - ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Byte) this.value).floatValue() - ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Byte) this.value).doubleValue() - ((Double) objValue).doubleValue());
-			}
-			break;
-		case SHORT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() - ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() - ((Byte) objValue).shortValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() - ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Short) this.value).intValue() - ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Short) this.value).longValue() - ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Short) this.value).floatValue() - ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Short) this.value).doubleValue() - ((Double) objValue).doubleValue());
-			}
-			break;
-		case INTEGER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() - ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() - ((Byte) objValue).intValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() - ((Short) objValue).intValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() - ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Integer) this.value).longValue() - ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Integer) this.value).floatValue() - ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Integer) this.value).doubleValue() - ((Double) objValue).doubleValue());
-			}
-			break;
-		case LONG:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() - ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() - ((Byte) objValue).longValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() - ((Short) objValue).longValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() - ((Integer) objValue).longValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() - ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Long) this.value).floatValue() - ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Long) this.value).doubleValue() - ((Double) objValue).doubleValue());
-			}
-			break;
-		case FLOAT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() - ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() - ((Byte) objValue).floatValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() - ((Short) objValue).floatValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() - ((Integer) objValue).floatValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() - ((Long) objValue).floatValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() - ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Float) this.value).doubleValue() - ((Double) objValue).doubleValue());
-			}
-			break;
-		case DOUBLE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() - ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() - ((Byte) objValue).doubleValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() - ((Short) objValue).doubleValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() - ((Integer) objValue).doubleValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() - ((Long) objValue).doubleValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() - ((Float) objValue).doubleValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() - ((Double) objValue).doubleValue());
-			}
-			break;
-		}
-		return primitive;
+		return calculate(SUBTRACTION, obj);
 	}
 
 	public Primitive add(Object obj) {
-		Object objValue = null;
-		if (!(obj instanceof Primitive)) {
-			obj = new Primitive(obj);
-		}
-		objValue = ((Primitive) obj).getValue();
-		Primitive primitive = null;
-		switch (this.typeId) {
-		case BOOLEAN:
-			primitive = null;
-			break;
-		case CHARACTER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, ((Character) this.value).charValue() + ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, (byte) ((Character) this.value).charValue() + ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, (short) ((Character) this.value).charValue() + ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Character) this.value).charValue() + ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Character) this.value).charValue() + ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Character) this.value).charValue() + ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Character) this.value).charValue() + ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(((Character) this.value).toString() + (String) objValue);
-			}
-			break;
-		case BYTE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Character.TYPE, (char) ((Byte) this.value).byteValue() + ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Byte.TYPE, ((Byte) this.value).byteValue() + ((Byte) objValue).byteValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, ((Byte) this.value).shortValue() + ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Byte) this.value).intValue() + ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Byte) this.value).longValue() + ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Byte) this.value).floatValue() + ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Byte) this.value).doubleValue() + ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(String.class, ((Byte) this.value).toString() + (String) objValue);
-			}
-			break;
-		case SHORT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() + ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() + ((Byte) objValue).shortValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Short.TYPE, ((Short) this.value).shortValue() + ((Short) objValue).shortValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Short) this.value).intValue() + ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Short) this.value).longValue() + ((Long) objValue).shortValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Short) this.value).floatValue() + ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Short) this.value).doubleValue() + ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(String.class, ((Short) this.value).toString() + (String) objValue);
-			}
-			break;
-		case INTEGER:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() + ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() + ((Byte) objValue).intValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() + ((Short) objValue).intValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Integer.TYPE, ((Integer) this.value).intValue() + ((Integer) objValue).intValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Integer) this.value).longValue() + ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Integer) this.value).floatValue() + ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Integer) this.value).doubleValue() + ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(String.class, ((Integer) this.value).toString() + (String) objValue);
-			}
-			break;
-		case LONG:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() + ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() + ((Byte) objValue).longValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() + ((Short) objValue).longValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() + ((Integer) objValue).longValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Long.TYPE, ((Long) this.value).longValue() + ((Long) objValue).longValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Long) this.value).floatValue() + ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Long) this.value).doubleValue() + ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(String.class, ((Long) this.value).toString() + (String) objValue);
-			}
-			break;
-		case FLOAT:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() + ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() + ((Byte) objValue).floatValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() + ((Short) objValue).floatValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() + ((Integer) objValue).floatValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() + ((Long) objValue).floatValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Float.TYPE, ((Float) this.value).floatValue() + ((Float) objValue).floatValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Float) this.value).doubleValue() + ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(String.class, ((Float) this.value).toString() + (String) objValue);
-			}
-			break;
-		case DOUBLE:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = null;
-				break;
-			case CHARACTER:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() + ((Character) objValue).charValue());
-				break;
-			case BYTE:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() + ((Byte) objValue).doubleValue());
-				break;
-			case SHORT:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() + ((Short) objValue).doubleValue());
-				break;
-			case INTEGER:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() + ((Integer) objValue).doubleValue());
-				break;
-			case LONG:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() + ((Long) objValue).doubleValue());
-				break;
-			case FLOAT:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() + ((Float) objValue).doubleValue());
-				break;
-			case DOUBLE:
-				primitive = new Primitive(Double.TYPE, ((Double) this.value).doubleValue() + ((Double) objValue).doubleValue());
-				break;
-			case STRING:
-				primitive = new Primitive(String.class, ((Double) this.value).toString() + (String) objValue);
-			}
-			break;
-		case STRING:
-			switch (((Primitive) obj).getTypeId()) {
-			case BOOLEAN:
-				primitive = new Primitive((String) this.value + ((Boolean) objValue).toString());
-
-				break;
-			case CHARACTER:
-				primitive = new Primitive((String) this.value + ((Character) objValue).toString());
-				break;
-			case BYTE:
-				primitive = new Primitive((String) this.value + ((Byte) objValue).toString());
-				break;
-			case SHORT:
-				primitive = new Primitive((String) this.value + ((Short) objValue).toString());
-				break;
-			case INTEGER:
-				primitive = new Primitive((String) this.value + ((Integer) objValue).toString());
-				break;
-			case LONG:
-				primitive = new Primitive((String) this.value + ((Long) objValue).toString());
-				break;
-			case FLOAT:
-				primitive = new Primitive((String) this.value + ((Float) objValue).toString());
-				break;
-			case DOUBLE:
-				primitive = new Primitive((String) this.value + ((Double) objValue).toString());
-				break;
-			case STRING:
-				primitive = new Primitive((String) this.value + (String) objValue);
-			}
-			break;
-		}
-		return primitive;
+		return calculate(ADDITION, obj);
 	}
 
 	public void increment() {
@@ -4342,6 +1550,9 @@ public class Primitive {
 			break;
 		case DOUBLE:
 			setValue(((Double) this.value).doubleValue() + 1.0D);
+			break;
+		default:
+			throw new RuntimeException(String.format("%s for %s is not allowed!", "++", getPrimitiveType()));
 		}
 	}
 
@@ -4367,6 +1578,9 @@ public class Primitive {
 			break;
 		case DOUBLE:
 			setValue(((Double) this.value).doubleValue() - 1.0D);
+			break;
+		default:
+			throw new RuntimeException(String.format("%s for %s is not allowed!", "--", getPrimitiveType()));
 		}
 	}
 }
