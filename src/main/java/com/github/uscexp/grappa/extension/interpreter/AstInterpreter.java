@@ -10,7 +10,6 @@ import com.github.uscexp.grappa.extension.annotations.AstCommand;
 import com.github.uscexp.grappa.extension.annotations.AstValue;
 import com.github.uscexp.grappa.extension.exception.AstInterpreterException;
 import com.github.uscexp.grappa.extension.nodes.AstTreeNode;
-import com.github.uscexp.grappa.extension.parser.AstTreeParserResult;
 import com.github.uscexp.grappa.extension.util.AstTreeUtil;
 
 /**
@@ -40,23 +39,22 @@ public class AstInterpreter<V> {
 		this.astTreeOutputStream = astTreeOutputStream;
 	}
 
-	public void interpretBackwardOrder(Class<? extends BaseParser<V>> parserClass, AstTreeParserResult<?> parsingResult, Long id)
+	public void interpretBackwardOrder(Class<? extends BaseParser<V>> parserClass, AstTreeNode<V> node, Long id)
 		throws AstInterpreterException {
-		interpret(parserClass, parsingResult, id, false);
+		interpret(parserClass, node, id, false);
 	}
 
-	public void interpretForewardOrder(Class<? extends BaseParser<V>> parserClass, AstTreeParserResult<?> parsingResult, Long id)
+	public void interpretForewardOrder(Class<? extends BaseParser<V>> parserClass, AstTreeNode<V> node, Long id)
 		throws AstInterpreterException {
-		interpret(parserClass, parsingResult, id, true);
+		interpret(parserClass, node, id, true);
 	}
 
-	@SuppressWarnings("unchecked")
-	private void interpret(Class<? extends BaseParser<V>> parserClass, AstTreeParserResult<?> parsingResult, Long id, boolean forewardOrder)
+	private void interpret(Class<? extends BaseParser<V>> parserClass, AstTreeNode<V> node, Long id, boolean forewardOrder)
 		throws AstInterpreterException {
 		try {
 			ProcessStore.getInstance(id);
 
-			root = (AstTreeNode<V>) parsingResult.getRootNode();
+			root = node;
 			
 			if(root == null) {
 				throw new AstInterpreterException(String.format("Can't build AstTreeNodes for parser class %s",

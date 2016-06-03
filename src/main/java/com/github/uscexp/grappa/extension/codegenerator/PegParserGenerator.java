@@ -14,14 +14,12 @@ import java.util.logging.Logger;
 
 import com.github.fge.grappa.Grappa;
 import com.github.fge.grappa.parsers.BaseParser;
-import com.github.fge.grappa.run.ListeningParseRunner;
-import com.github.fge.grappa.run.ParsingResult;
 import com.github.uscexp.grappa.extension.exception.AstInterpreterException;
 import com.github.uscexp.grappa.extension.exception.PegParserGeneratorException;
 import com.github.uscexp.grappa.extension.interpreter.AstInterpreter;
 import com.github.uscexp.grappa.extension.interpreter.ProcessStore;
-import com.github.uscexp.grappa.extension.nodes.treeconstruction.AstTreeNodeBuilder;
-import com.github.uscexp.grappa.extension.parser.AstTreeParserResult;
+import com.github.uscexp.grappa.extension.nodes.AstTreeNode;
+import com.github.uscexp.grappa.extension.parser.Parser;
 import com.github.uscexp.grappa.extension.parser.peg.PegParser;
 import com.google.common.base.Preconditions;
 import com.sun.codemodel.JClass;
@@ -47,7 +45,7 @@ public class PegParserGenerator {
 	private File file = null;
 
 	private PegParser parser;
-	private AstTreeParserResult<String> parsingResult;
+	private AstTreeNode<String> rootNode;
 	private String parserClassString;
 	private String genericTypeName;
 
@@ -83,25 +81,10 @@ public class PegParserGenerator {
 
 		parser = Grappa.createParser(PegParser.class);
 
-		parsingResult = parseInput(pegInput);
+		rootNode = Parser.parseInput(PegParser.class, parser.grammar(), pegInput, true);
 
 		generateParserClassFile(parserClassString, genericTypeName, sourceOutputPath);
 
-	}
-
-	private AstTreeParserResult<String> parseInput(String pegInput)
-		throws PegParserGeneratorException {
-		final AstTreeNodeBuilder<String> treeNodeBuilder = new AstTreeNodeBuilder<String>(PegParser.class, false);
-		
-		final ListeningParseRunner<String> parseRunner = new ListeningParseRunner<>(parser.grammar());
-		
-		parseRunner.registerListener(treeNodeBuilder);
-
-		final ParsingResult<String> parsingResult = parseRunner.run(pegInput);
-		
-		AstTreeParserResult<String> astTreeParserResult = new AstTreeParserResult<>(parsingResult, treeNodeBuilder.getRootNode());
-
-		return astTreeParserResult;
 	}
 
 	private void generateParserClassFile(String parserClassString, String genericTypeName, String sourceOutputPath)
@@ -135,7 +118,7 @@ public class PegParserGenerator {
 		processStore.tierOneUp(true);
 		openProcessStore.tierOneUp(true);
 
-		astInterpreter.interpretBackwardOrder(parser.getClass(), parsingResult, id);
+		astInterpreter.interpretBackwardOrder(parser.getClass(), rootNode, id);
 
 		codeModel.build(new File(sourceOutputPath));
 	}

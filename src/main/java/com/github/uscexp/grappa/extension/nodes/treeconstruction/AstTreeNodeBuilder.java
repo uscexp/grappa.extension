@@ -83,7 +83,8 @@ public class AstTreeNodeBuilder<V> extends ParseRunnerListener<V> {
 			throw new RuntimeException(e);
 		}
 
-        nodes.put(level, node);
+//    	if(!removeAstNopTreeNodes || level == 0 || !AstNopTreeNode.class.equals(node.getClass()))
+    	nodes.put(level, node);
 	}
 
 	@Override
@@ -126,26 +127,29 @@ public class AstTreeNodeBuilder<V> extends ParseRunnerListener<V> {
 
 	@Override
 	public void afterParse(PostParseEvent<V> event) {
-		if(removeAstNopTreeNodes)
+		if(removeAstNopTreeNodes && rootNode != null)
 			removeAstNopTreeNodes(rootNode);
 	}
 
 	public static <V> void removeAstNopTreeNodes(AstTreeNode<V> rootNode) {
-		removeAstNopTreeNodes(rootNode, rootNode);
+		removeAstNopTreeNodes(rootNode, rootNode, rootNode);
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <V> void removeAstNopTreeNodes(AstTreeNode<V> node, AstTreeNode<V> parentNode) {
+	private static <V> void removeAstNopTreeNodes(AstTreeNode<V> rootNode, AstTreeNode<V> node, AstTreeNode<V> parentNode) {
 		for (AstTreeNode<V> childNode : node.getChildren().toArray(new AstTreeNode[node.getChildren().size()])) {
 			if(AstNopTreeNode.class.isAssignableFrom(childNode.getClass())) {
 				node.getChildren().remove(childNode);
-				removeAstNopTreeNodes(childNode, parentNode);
+				removeAstNopTreeNodes(rootNode, childNode, parentNode);
 			} else {
-				if(AstNopTreeNode.class.isAssignableFrom(node.getClass())) {
+				if(AstNopTreeNode.class.isAssignableFrom(node.getClass()) && parentNode != rootNode) {
 					parentNode.getChildren().add(childNode);
 					childNode.setParent(parentNode);
+				} else {
+					node.getChildren().remove(childNode);
+					parentNode.getChildren().add(childNode);
 				}
-				removeAstNopTreeNodes(childNode, childNode);
+				removeAstNopTreeNodes(rootNode, childNode, childNode);
 			}
 		}
 	}

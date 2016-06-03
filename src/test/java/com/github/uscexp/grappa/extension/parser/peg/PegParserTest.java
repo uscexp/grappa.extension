@@ -8,10 +8,8 @@ import static org.junit.Assert.assertNotNull;
 import org.junit.Test;
 
 import com.github.fge.grappa.Grappa;
-import com.github.fge.grappa.run.ListeningParseRunner;
-import com.github.fge.grappa.run.ParsingResult;
 import com.github.uscexp.grappa.extension.nodes.AstTreeNode;
-import com.github.uscexp.grappa.extension.nodes.treeconstruction.AstTreeNodeBuilder;
+import com.github.uscexp.grappa.extension.parser.Parser;
 
 
 /**
@@ -28,22 +26,10 @@ public class PegParserTest {
 				"B <- b B? c";
 
 		PegParser parser = Grappa.createParser(PegParser.class);
-		final AstTreeNodeBuilder<String> treeNodeBuilder = new AstTreeNodeBuilder<String>(PegParser.class, false);
-		ListeningParseRunner<String> parseRunner = new ListeningParseRunner<>(parser.grammar());
+		AstTreeNode<String> rootNode = Parser.parseInput(PegParser.class, parser.grammar(), input);
 		
-		parseRunner.registerListener(treeNodeBuilder);
+		assertNotNull(rootNode);
 
-		ParsingResult<String> parsingResult = parseRunner.run(input);
-		
-		assertNotNull(parsingResult);
-		
-		AstTreeNode<String> root = treeNodeBuilder.getRootNode();
-		
-		assertNotNull(root);
-
-		System.out.println("Root node text: " + root.getValue());
-		
-		assertNotNull(parsingResult);
-		
+		System.out.println("Root node text: " + rootNode.getValue());
 	}
 }

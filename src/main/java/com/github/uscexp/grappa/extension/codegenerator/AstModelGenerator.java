@@ -56,9 +56,6 @@ public class AstModelGenerator {
 			sourceOutputPath = ".";
 		}
 
-//		@SuppressWarnings("unchecked")
-//		BaseParser<? extends BaseParser<?>> parser = (BaseParser<? extends BaseParser<?>>) Grappa.createParser(parserClass);
-
 		MethodNameToTreeNodeInfoMaps methodNameToTreeNodeInfoMaps = AstTreeNodeBuilder.findImplementationClassesAndAnnotationTypes(
 				parserClass);
 
