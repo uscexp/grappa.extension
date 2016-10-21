@@ -149,7 +149,7 @@ public class Primitive {
 			this.primitiveType = getClass(type);
 		}
 		setTypeId();
-		setValue(value);
+		setObjectValue(value);
 	}
 
 	public Primitive(Class<?> type, BufferedReader value) {
@@ -252,27 +252,27 @@ public class Primitive {
 
 	private void setTypeId() {
 		if (getPrimitiveType().equals(Boolean.TYPE)) {
-			this.typeId = 1;
+			this.typeId = BOOLEAN;
 		} else if (getPrimitiveType().equals(Character.TYPE)) {
-			this.typeId = 2;
+			this.typeId = CHARACTER;
 		} else if (getPrimitiveType().equals(Byte.TYPE)) {
-			this.typeId = 3;
+			this.typeId = BYTE;
 		} else if (getPrimitiveType().equals(Short.TYPE)) {
-			this.typeId = 4;
+			this.typeId = SHORT;
 		} else if (getPrimitiveType().equals(Integer.TYPE)) {
-			this.typeId = 5;
+			this.typeId = INTEGER;
 		} else if (getPrimitiveType().equals(Long.TYPE)) {
-			this.typeId = 6;
+			this.typeId = LONG;
 		} else if (getPrimitiveType().equals(Float.TYPE)) {
-			this.typeId = 7;
+			this.typeId = FLOAT;
 		} else if (getPrimitiveType().equals(Double.TYPE)) {
-			this.typeId = 8;
+			this.typeId = DOUBLE;
 		} else if (getPrimitiveType().equals(String.class)) {
-			this.typeId = 9;
+			this.typeId = STRING;
 		} else if (getPrimitiveType().equals(BufferedReader.class)) {
-			this.typeId = 10;
+			this.typeId = FILE_READER;
 		} else if (getPrimitiveType().equals(BufferedWriter.class)) {
-			this.typeId = 11;
+			this.typeId = FILE_WRITER;
 		}
 	}
 
@@ -875,7 +875,7 @@ public class Primitive {
 			this.value = new Double(value);
 			break;
 		case STRING:
-			this.value = String.valueOf(value);
+			this.value = value;
 			break;
 		case FILE_READER:
 			try {
@@ -912,303 +912,50 @@ public class Primitive {
 		}
 	}
 
-	public void setValue(Object value) {
+	public void setObjectValue(Object value) {
 		Primitive primitive = new Primitive(value);
 		switch (primitive.getTypeId()) {
 		case BOOLEAN:
-			switch (getTypeId()) {
-			case BOOLEAN:
-				value = new Boolean(primitive.getBooleanValue());
-				break;
-			case CHARACTER:
-				value = new Character(primitive.getCharacterValue());
-				break;
-			case BYTE:
-				value = new Byte(primitive.getByteValue());
-				break;
-			case SHORT:
-				value = new Short(primitive.getShortValue());
-				break;
-			case INTEGER:
-				value = new Integer(primitive.getIntegerValue());
-				break;
-			case LONG:
-				value = new Long(primitive.getLongValue());
-				break;
-			case FLOAT:
-				value = new Float(primitive.getFloatValue());
-				break;
-			case DOUBLE:
-				value = new Double(primitive.getDoubleValue());
-				break;
-			case STRING:
-				value = String.valueOf(value);
-				break;
-			case FILE_READER:
-				value = ((BufferedReader) value);
-				break;
-			case FILE_WRITER:
-				value = ((BufferedWriter) value);
-			}
+			setValue(primitive.getBooleanValue());
 			break;
 		case CHARACTER:
-			switch (getTypeId()) {
-			case BOOLEAN:
-				value = new Boolean(primitive.getBooleanValue());
-				break;
-			case CHARACTER:
-				value = new Character(primitive.getCharacterValue());
-				break;
-			case BYTE:
-				value = new Byte(primitive.getByteValue());
-				break;
-			case SHORT:
-				value = new Short(primitive.getShortValue());
-				break;
-			case INTEGER:
-				value = new Integer(primitive.getIntegerValue());
-				break;
-			case LONG:
-				value = new Long(primitive.getLongValue());
-				break;
-			case FLOAT:
-				value = new Float(primitive.getFloatValue());
-				break;
-			case DOUBLE:
-				value = new Double(primitive.getDoubleValue());
-				break;
-			case STRING:
-				value = String.valueOf(value);
-				break;
-			case FILE_READER:
-				value = ((BufferedReader) value);
-				break;
-			case FILE_WRITER:
-				value = ((BufferedWriter) value);
-			}
+			setValue(primitive.getCharacterValue());
 			break;
 		case BYTE:
-			switch (getTypeId()) {
-			case BOOLEAN:
-				value = new Boolean(primitive.getBooleanValue());
-				break;
-			case CHARACTER:
-				value = new Character(primitive.getCharacterValue());
-				break;
-			case BYTE:
-				value = new Byte(primitive.getByteValue());
-				break;
-			case SHORT:
-				value = new Short(primitive.getShortValue());
-				break;
-			case INTEGER:
-				value = new Integer(primitive.getIntegerValue());
-				break;
-			case LONG:
-				value = new Long(primitive.getLongValue());
-				break;
-			case FLOAT:
-				value = new Float(primitive.getFloatValue());
-				break;
-			case DOUBLE:
-				value = new Double(primitive.getDoubleValue());
-				break;
-			case STRING:
-				value = String.valueOf(value);
-				break;
-			case FILE_READER:
-				value = ((BufferedReader) value);
-				break;
-			case FILE_WRITER:
-				value = ((BufferedWriter) value);
-			}
+			setValue(primitive.getByteValue());
 			break;
 		case SHORT:
-			switch (getTypeId()) {
-			case BOOLEAN:
-				value = new Boolean(primitive.getBooleanValue());
-				break;
-			case CHARACTER:
-				value = new Character(primitive.getCharacterValue());
-				break;
-			case BYTE:
-				value = new Byte(primitive.getByteValue());
-				break;
-			case SHORT:
-				value = primitive.getValue();
-				break;
-			case INTEGER:
-				value = new Integer(primitive.getIntegerValue());
-				break;
-			case LONG:
-				value = new Long(primitive.getLongValue());
-				break;
-			case FLOAT:
-				value = new Float(primitive.getFloatValue());
-				break;
-			case DOUBLE:
-				value = new Double(primitive.getDoubleValue());
-				break;
-			case STRING:
-				value = String.valueOf(value);
-				break;
-			case FILE_READER:
-				value = ((BufferedReader) value);
-				break;
-			case FILE_WRITER:
-				value = ((BufferedWriter) value);
-			}
+			setValue(primitive.getShortValue());
 			break;
 		case INTEGER:
-			switch (getTypeId()) {
-			case BOOLEAN:
-				value = new Boolean(primitive.getBooleanValue());
-				break;
-			case CHARACTER:
-				value = new Character(primitive.getCharacterValue());
-				break;
-			case BYTE:
-				value = new Byte(primitive.getByteValue());
-				break;
-			case SHORT:
-				value = new Short(primitive.getShortValue());
-				break;
-			case INTEGER:
-				value = primitive.getValue();
-				break;
-			case LONG:
-				value = new Long(primitive.getLongValue());
-				break;
-			case FLOAT:
-				value = new Float(primitive.getFloatValue());
-				break;
-			case DOUBLE:
-				value = new Double(primitive.getDoubleValue());
-				break;
-			case STRING:
-				value = String.valueOf(value);
-				break;
-			case FILE_READER:
-				value = ((BufferedReader) value);
-				break;
-			case FILE_WRITER:
-				value = ((BufferedWriter) value);
-			}
+			setValue(primitive.getIntegerValue());
 			break;
 		case LONG:
-			switch (getTypeId()) {
-			case BOOLEAN:
-				value = new Boolean(primitive.getBooleanValue());
-				break;
-			case CHARACTER:
-				value = new Character(primitive.getCharacterValue());
-				break;
-			case BYTE:
-				value = new Byte(primitive.getByteValue());
-				break;
-			case SHORT:
-				value = new Short(primitive.getShortValue());
-				break;
-			case INTEGER:
-				value = new Integer(primitive.getIntegerValue());
-				break;
-			case LONG:
-				value = primitive.getValue();
-				break;
-			case FLOAT:
-				value = new Float(primitive.getFloatValue());
-				break;
-			case DOUBLE:
-				value = new Double(primitive.getDoubleValue());
-				break;
-			case STRING:
-				value = String.valueOf(value);
-				break;
-			case FILE_READER:
-				value = ((BufferedReader) value);
-				break;
-			case FILE_WRITER:
-				value = ((BufferedWriter) value);
-			}
+			setValue(primitive.getLongValue());
 			break;
 		case FLOAT:
-			switch (getTypeId()) {
-			case BOOLEAN:
-				value = new Boolean(primitive.getBooleanValue());
-				break;
-			case CHARACTER:
-				value = new Character(primitive.getCharacterValue());
-				break;
-			case BYTE:
-				value = new Byte(primitive.getByteValue());
-				break;
-			case SHORT:
-				value = new Short(primitive.getShortValue());
-				break;
-			case INTEGER:
-				value = new Integer(primitive.getIntegerValue());
-				break;
-			case LONG:
-				value = new Long(primitive.getLongValue());
-				break;
-			case FLOAT:
-				value = new Float(primitive.getFloatValue());
-				break;
-			case DOUBLE:
-				value = new Double(primitive.getDoubleValue());
-				break;
-			case STRING:
-				value = String.valueOf(value);
-				break;
-			case FILE_READER:
-				value = ((BufferedReader) value);
-				break;
-			case FILE_WRITER:
-				value = ((BufferedWriter) value);
-			}
+			setValue(primitive.getFloatValue());
 			break;
 		case DOUBLE:
-			switch (getTypeId()) {
-			case BOOLEAN:
-				value = new Boolean(primitive.getBooleanValue());
-				break;
-			case CHARACTER:
-				value = new Character(primitive.getCharacterValue());
-				break;
-			case BYTE:
-				value = new Byte(primitive.getByteValue());
-				break;
-			case SHORT:
-				value = new Short(primitive.getShortValue());
-				break;
-			case INTEGER:
-				value = new Integer(primitive.getIntegerValue());
-				break;
-			case LONG:
-				value = new Long(primitive.getLongValue());
-				break;
-			case FLOAT:
-				value = new Float(primitive.getFloatValue());
-				break;
-			case DOUBLE:
-				value = new Double(primitive.getDoubleValue());
-				break;
-			case STRING:
-				value = String.valueOf(value);
-				break;
-			case FILE_READER:
-				value = ((BufferedReader) value);
-				break;
-			case FILE_WRITER:
-				value = ((BufferedWriter) value);
-			}
+			setValue(primitive.getDoubleValue());
+			break;
+			
+		case STRING:
+			setValue((String)primitive.getValue());
+			break;
+			
+		case FILE_READER:
+			setValue((BufferedReader)primitive.getValue());
+			break;
+			
+		case FILE_WRITER:
+			setValue((BufferedWriter)primitive.getValue());
 			break;
 			
 			default:
 				throw new RuntimeException(String.format("%s can't be assigned to %s of type %s",
 						value == null ? "null" : value.getClass().getSimpleName(), getClass().getSimpleName(), getPrimitiveType().getSimpleName()));
 		}
-		this.value = value;
 	}
 
 	public String resolveGetMethodName() {

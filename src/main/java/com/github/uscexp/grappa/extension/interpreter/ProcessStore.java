@@ -374,6 +374,10 @@ public final class ProcessStore<V> {
 		return methods.remove(methodSignature);
 	}
 
+	public Map<MethodSignature, MethodDeclaration> getMethods() {
+		return methods;
+	}
+
 	public void clearMethods() {
 		methods.clear();
 	}
