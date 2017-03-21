@@ -17,4 +17,12 @@ public abstract class AstCommandTreeNode<V> extends AstTreeNode<V> {
 	public AstCommandTreeNode(String rule, String value) {
 		super(rule, value);
 	}
+	
+	public AstTreeNode<V> getSibling(int index) {
+		AstTreeNode<V> sibling = null;
+		if(getParent() != null && getParent().getChildren() != null && getParent().getChildren().size() > index) {
+			sibling = getParent().getChildren().get(index);
+		}
+		return sibling;
+	}
 }

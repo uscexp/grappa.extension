@@ -3,10 +3,9 @@
  */
 package com.github.uscexp.grappa.extension.testparser;
 
-import java.util.Stack;
-
 import com.github.uscexp.grappa.extension.interpreter.ProcessStore;
 import com.github.uscexp.grappa.extension.nodes.AstCommandTreeNode;
+import com.github.uscexp.grappa.extension.util.IStack;
 
 /**
  * @author haui
@@ -28,7 +27,7 @@ public class AstExpressionTreeNode extends AstCommandTreeNode<Double> {
 		int sumIdx = value.indexOf('+');
 		int subIdx = value.indexOf('-');
 		if ((sumIdx > -1) || (subIdx > -1)) {
-			Stack<Object> stack = ProcessStore.getInstance(id).getStack();
+			IStack<Object> stack = ProcessStore.getInstance(id).getStack();
 			Double left = (Double) StackAccessUtil.pop(stack, Double.class);
 			Double right = (Double) StackAccessUtil.pop(stack, Double.class);
 			double result = 0;

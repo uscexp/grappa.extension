@@ -1,13 +1,13 @@
 package com.github.uscexp.grappa.extension.testparser;
 
-import java.util.Stack;
+import com.github.uscexp.grappa.extension.util.IStack;
 
 public final class StackAccessUtil {
 
 	private StackAccessUtil() {
 	}
 	
-	public static <V> Object pop(Stack<Object> stack, Class<?> type) {
+	public static <V> Object pop(IStack<Object> stack, Class<?> type) {
 		Object result = null;
 		
 		Object value = null;
@@ -20,7 +20,7 @@ public final class StackAccessUtil {
 	}
 
 	
-	public static <V> Object peek(Stack<Object> stack, Class<?> type) {
+	public static <V> Object peek(IStack<Object> stack, Class<?> type) {
 		Object result = null;
 		
 		Object value = null;

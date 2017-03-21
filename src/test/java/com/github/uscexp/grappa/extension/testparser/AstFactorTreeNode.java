@@ -3,10 +3,9 @@
  */
 package com.github.uscexp.grappa.extension.testparser;
 
-import java.util.Stack;
-
 import com.github.uscexp.grappa.extension.interpreter.ProcessStore;
 import com.github.uscexp.grappa.extension.nodes.AstCommandTreeNode;
+import com.github.uscexp.grappa.extension.util.IStack;
 
 /**
  * @author haui
@@ -25,7 +24,7 @@ public class AstFactorTreeNode extends AstCommandTreeNode<Double> {
 	@Override
 	protected void interpretAfterChilds(Long id) throws Exception {
 		if(value.indexOf('^') > -1) {
-			Stack<Object> stack = ProcessStore.getInstance(id).getStack();
+			IStack<Object> stack = ProcessStore.getInstance(id).getStack();
 			Double right = (Double) StackAccessUtil.pop(stack, Double.class);
 			if(!(stack.peek() instanceof Double))
 				stack.pop();

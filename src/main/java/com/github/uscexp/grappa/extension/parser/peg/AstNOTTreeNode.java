@@ -3,7 +3,7 @@
  */
 package com.github.uscexp.grappa.extension.parser.peg;
 
-import java.util.Stack;
+import com.github.uscexp.grappa.extension.util.IStack;
 
 /**
  * Command implementation for the <code>PegParser</code> rule: NOT.
@@ -16,7 +16,7 @@ public class AstNOTTreeNode<V> extends AstPegBaseTreeNode<V> {
 	@Override
 	protected void interpretAfterChilds(Long id) throws ReflectiveOperationException {
 		super.interpretAfterChilds(id);
-		Stack<Object> stack = this.processStore.getTierStack();
+		IStack<Object> stack = this.processStore.getTierStack();
 		String param = (String) stack.pop();
 		stack.push("testNot(" + param + ")");
 	}

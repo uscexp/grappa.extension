@@ -3,7 +3,7 @@
  */
 package com.github.uscexp.grappa.extension.parser.peg;
 
-import java.util.Stack;
+import com.github.uscexp.grappa.extension.util.IStack;
 
 /**
  * Command implementation for the <code>PegParser</code> rule: sequence.
@@ -16,7 +16,7 @@ public class AstSequenceTreeNode<V> extends AstPegBaseTreeNode<V> {
 	@Override
 	protected void interpretBeforeChilds(Long id) throws ReflectiveOperationException {
 		super.interpretBeforeChilds(id);
-		Stack<Object> openStack = this.openProcessStore.getTierStack();
+		IStack<Object> openStack = this.openProcessStore.getTierStack();
 		String peek = "";
 		
 		if (!openStack.isEmpty()) {
@@ -33,8 +33,8 @@ public class AstSequenceTreeNode<V> extends AstPegBaseTreeNode<V> {
 	protected void interpretAfterChilds(Long id) throws ReflectiveOperationException {
 		super.interpretAfterChilds(id);
 		String methodBody = "";
-		Stack<Object> stack = this.processStore.getTierStack();
-		Stack<Object> openStack = this.openProcessStore.getTierStack();
+		IStack<Object> stack = this.processStore.getTierStack();
+		IStack<Object> openStack = this.openProcessStore.getTierStack();
 
 		if(!AstLiteralTreeNode.class.isAssignableFrom(getParent().getClass())
 				&& !AstCharRangeTreeNode.class.isAssignableFrom(getParent().getClass())) {

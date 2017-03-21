@@ -9,13 +9,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 
 import com.github.fge.grappa.parsers.BaseParser;
 import com.github.uscexp.grappa.extension.codegenerator.PegParserGenerator;
 import com.github.uscexp.grappa.extension.codegenerator.ReservedJavaWords;
 import com.github.uscexp.grappa.extension.interpreter.ProcessStore;
 import com.github.uscexp.grappa.extension.nodes.AstCommandTreeNode;
+import com.github.uscexp.grappa.extension.util.IStack;
 import com.sun.codemodel.JCodeModel;
 import com.sun.codemodel.JDefinedClass;
 
@@ -56,7 +56,7 @@ public class AstPegBaseTreeNode<V> extends AstCommandTreeNode<V> {
 
 	protected String checkPostponedAction(String bodyString) {
 		String openMethod = "";
-		Stack<Object> openStack = this.openProcessStore.getTierStack();
+		IStack<Object> openStack = this.openProcessStore.getTierStack();
 		if (!openStack.isEmpty()) {
 			openMethod = (String) openStack.pop();
 		}

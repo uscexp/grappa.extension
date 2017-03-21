@@ -12,7 +12,6 @@ import static org.junit.Assert.assertTrue;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 
 import org.junit.After;
 import org.junit.Before;
@@ -20,6 +19,7 @@ import org.junit.Test;
 
 import com.github.uscexp.grappa.extension.interpreter.type.MethodDeclaration;
 import com.github.uscexp.grappa.extension.interpreter.type.MethodSignature;
+import com.github.uscexp.grappa.extension.util.IStack;
 
 /**
  * @author haui
@@ -102,7 +102,7 @@ public class ProcessStoreTest {
 
 	@Test
 	public void testGetStack() throws Exception {
-		Stack<Object> stack = processStoreSUT.getStack();
+		IStack<Object> stack = processStoreSUT.getStack();
 		
 		assertNotNull(stack);
 	}
@@ -351,23 +351,23 @@ public class ProcessStoreTest {
 
 	@Test
 	public void testRemoveTierStack() throws Exception {
-		Stack<Object> stack = processStoreSUT.tierOneUp(true);
+		IStack<Object> stack = processStoreSUT.tierOneUp(true);
 		
 		assertNotNull(stack);
 		
-		Stack<Object> tierStack = processStoreSUT.getTierStack();
+		IStack<Object> tierStack = processStoreSUT.getTierStack();
 		
 		assertEquals(stack, tierStack);
 		
-		Stack<Object> tierOneDown = processStoreSUT.tierOneDown(false);
+		IStack<Object> tierOneDown = processStoreSUT.tierOneDown(false);
 		
 		assertEquals(stack, tierOneDown);
 		
-		Stack<Object> removeTierStack = processStoreSUT.tierOneDown(true);
+		IStack<Object> removeTierStack = processStoreSUT.tierOneDown(true);
 		
 		assertEquals(stack, removeTierStack);
 		
-		Stack<Object> tierStack2 = processStoreSUT.getTierStack();
+		IStack<Object> tierStack2 = processStoreSUT.getTierStack();
 		
 		assertNull(tierStack2);
 	}

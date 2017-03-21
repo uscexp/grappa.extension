@@ -7,11 +7,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 
 import com.github.uscexp.grappa.extension.interpreter.type.MethodDeclaration;
 import com.github.uscexp.grappa.extension.interpreter.type.MethodSignature;
 import com.github.uscexp.grappa.extension.interpreter.type.Primitive;
+import com.github.uscexp.grappa.extension.util.IStack;
+import com.github.uscexp.grappa.extension.util.LogStack;
+import com.github.uscexp.grappa.extension.util.ProcessStack;
 
 /**
  * VariableStore for a process.
@@ -37,10 +39,10 @@ public final class ProcessStore<V> {
 	private Map<MethodSignature, MethodDeclaration> methods = new HashMap<>();
 
 	/** Stack for calculations. */
-	private Stack<Object> stack = new Stack<>();
+	private IStack<Object> stack = new ProcessStack<>();
 
 	/** Stack for several tiers. */
-	private List<Stack<Object>> tierStack = new ArrayList<>();
+	private List<IStack<Object>> tierStack = new ArrayList<>();
 
 	/** Block variable hierarchy: stores variable Maps. */
 	private List<Map<Object, Object>> working = new ArrayList<>();
@@ -52,15 +54,26 @@ public final class ProcessStore<V> {
 	private List<List<Map<Object, Object>>> oldBlockHierarchy = new ArrayList<>();
 
 	private String[] args;
+	
+	private boolean testing; 
 
 	private ProcessStore() {
+		this(false);
+	}
+
+	private ProcessStore(boolean testing) {
+		this.testing = testing;
 	}
 
 	public static <V> ProcessStore<V> getInstance(Long id) {
+		return getInstance(id, false);
+	}
+
+	public static <V> ProcessStore<V> getInstance(Long id, boolean testing) {
 		@SuppressWarnings("unchecked")
 		ProcessStore<V> store = (ProcessStore<V>) instances.get(id);
 		if (store == null) {
-			store = new ProcessStore<>();
+			store = new ProcessStore<>(testing);
 			instances.put(id, store);
 		}
 
@@ -99,7 +112,7 @@ public final class ProcessStore<V> {
 	 *
 	 * @return  Stack
 	 */
-	public Stack<Object> getTierStack() {
+	public IStack<Object> getTierStack() {
 		if (tier < 0)
 			return null;
 		return tierStack.get(tier);
@@ -110,23 +123,24 @@ public final class ProcessStore<V> {
 	 *
 	 * @return  Stack
 	 */
-	public Stack<Object> tierOneUp(boolean newStack) {
+	public IStack<Object> tierOneUp(boolean newStack) {
 		++tier;
-		Stack<Object> result;
-		if (tierStack.size() == tier) {
-			result = new Stack<>();
+		IStack<Object> result;
+		if (newStack || tierStack.size() == tier) {
+			if(testing) {
+				result = new LogStack<>(new ProcessStack<>(), System.out);
+			} else {
+				result = new ProcessStack<>();
+			}
 			tierStack.add(result);
-		} else if (newStack) {
-			result = new Stack<>();
-			tierStack.add(tier, result);
 		} else {
 			result = getTierStack();
 		}
 		return result;
 	}
 
-	public Stack<Object> tierOneDown(boolean remove) {
-		Stack<Object> result = null;
+	public IStack<Object> tierOneDown(boolean remove) {
+		IStack<Object> result = null;
 		if (remove) {
 			result = removeTierStack();
 		} else {
@@ -142,8 +156,8 @@ public final class ProcessStore<V> {
 	 *
 	 * @return  Stack
 	 */
-	protected Stack<Object> removeTierStack() {
-		Stack<Object> result = tierStack.remove(tier);
+	protected IStack<Object> removeTierStack() {
+		IStack<Object> result = tierStack.remove(tier);
 		--tier;
 		return result;
 	}
@@ -153,7 +167,7 @@ public final class ProcessStore<V> {
 	 *
 	 * @return  Stack
 	 */
-	public Stack<Object> getStack() {
+	public IStack<Object> getStack() {
 		return stack;
 	}
 
@@ -314,9 +328,13 @@ public final class ProcessStore<V> {
 	public boolean removeLastBlockVariableMap() {
 		boolean success = false;
 
-		if (working.size() > 0) {
-			if (working.remove(working.size() - 1) != null)
-				success = true;
+		if(testing) {
+			success = true;
+		} else {
+			if (working.size() > 0) {
+				if (working.remove(working.size() - 1) != null)
+					success = true;
+			}
 		}
 		return success;
 	}

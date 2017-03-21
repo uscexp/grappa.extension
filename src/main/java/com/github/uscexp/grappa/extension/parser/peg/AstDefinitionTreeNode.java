@@ -3,11 +3,11 @@
  */
 package com.github.uscexp.grappa.extension.parser.peg;
 
-import java.util.Stack;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
 import com.github.fge.grappa.rules.Rule;
+import com.github.uscexp.grappa.extension.util.IStack;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JMethod;
 
@@ -31,8 +31,8 @@ public class AstDefinitionTreeNode<V> extends AstPegBaseTreeNode<V> {
 	@Override
 	protected void interpretAfterChilds(Long id) throws ReflectiveOperationException {
 		super.interpretAfterChilds(id);
-		Stack<Object> stack = this.processStore.getTierStack();
-		Stack<Object> openStack = this.openProcessStore.getTierStack();
+		IStack<Object> stack = this.processStore.getTierStack();
+		IStack<Object> openStack = this.openProcessStore.getTierStack();
 		if ((this.value != null) && (!this.value.isEmpty())) {
 			StringTokenizer st = new StringTokenizer(this.value, " \t\n\r", false);
 			if (st.hasMoreTokens()) {
