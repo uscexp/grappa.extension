@@ -22,7 +22,7 @@ import com.github.uscexp.grappa.extension.interpreter.ProcessStore;
  */
 public abstract class AstTreeNode<V> {
 
-	protected boolean skip = false;
+	protected boolean skipAutoInterpretation = false;
 	protected String rule;
 	protected String value;
 	protected AstTreeNode<V> parent;
@@ -35,23 +35,21 @@ public abstract class AstTreeNode<V> {
 	}
 
 	public void interpretIt(Long id, boolean forewardOrder) throws Exception {
-		if (!ProcessStore.getInstance(id).checkPrecondition() || skip)
+		if (!ProcessStore.getInstance(id).checkPrecondition())
 			return;
 		interpretBeforeChilds(id);
-		if(skip)
-			return;
-		if (forewardOrder) {
-			for (AstTreeNode<V> astTreeNode : getChildren()) {
-				astTreeNode.interpretIt(id, forewardOrder);
-			}
-		} else {
-			for (int i = children.size() - 1; i >= 0; i--) {
-				AstTreeNode<V> childNode = children.get(i);
-				childNode.interpretIt(id, forewardOrder);
+		if(!skipAutoInterpretation) {
+			if (forewardOrder) {
+				for (AstTreeNode<V> astTreeNode : getChildren()) {
+					astTreeNode.interpretIt(id, forewardOrder);
+				}
+			} else {
+				for (int i = children.size() - 1; i >= 0; i--) {
+					AstTreeNode<V> childNode = children.get(i);
+					childNode.interpretIt(id, forewardOrder);
+				}
 			}
 		}
-		if(skip)
-			return;
 		interpretAfterChilds(id);
 	}
 

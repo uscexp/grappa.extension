@@ -298,6 +298,15 @@ public enum Comperator {
 	public String toString() {
 		return text;
 	}
+	
+	public static Comperator valueByString(String comparatorLiteral) {
+		for (Comperator c : values()) {
+			if(c.text.equals(comparatorLiteral)) {
+				return c;
+			}
+		}
+		return null;
+	}
 
 	private static Object handleError(Comperator comperator, String className) {
 		throw new RuntimeException(String.format("%s for %s is not allowed!", comperator.toString(), className));

@@ -5,6 +5,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
 /**
  * @author haui
  *
@@ -131,6 +134,41 @@ public abstract class AbstractDecoratorStack<E> implements IStack<E> {
 	@Override
 	public List<E> subList(int fromIndex, int toIndex) {
 		return stack.subList(fromIndex, toIndex);
+	}
+
+	@Override
+	public E push(E item) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public E pop() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public E peek() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean empty() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public int search(Object o) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public String toString() {
+		return ReflectionToStringBuilder.toString(this, ToStringStyle.MULTI_LINE_STYLE);
 	}
 
 }
