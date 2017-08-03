@@ -1,6 +1,6 @@
 package com.github.uscexp.grappa.extension.interpreter.type;
 
-public enum Comperator {
+public enum Comparator {
 	GREATER(">") {
 		@Override
 		public boolean apply(boolean x1, boolean x2) {
@@ -280,7 +280,7 @@ public enum Comperator {
 	
 	private final String text;
 
-	private Comperator(String text) {
+	private Comparator(String text) {
 		this.text = text;
 	}
 
@@ -299,8 +299,8 @@ public enum Comperator {
 		return text;
 	}
 	
-	public static Comperator valueByString(String comparatorLiteral) {
-		for (Comperator c : values()) {
+	public static Comparator valueByString(String comparatorLiteral) {
+		for (Comparator c : values()) {
 			if(c.text.equals(comparatorLiteral)) {
 				return c;
 			}
@@ -308,7 +308,7 @@ public enum Comperator {
 		return null;
 	}
 
-	private static Object handleError(Comperator comperator, String className) {
+	private static Object handleError(Comparator comperator, String className) {
 		throw new RuntimeException(String.format("%s for %s is not allowed!", comperator.toString(), className));
 	}
 }

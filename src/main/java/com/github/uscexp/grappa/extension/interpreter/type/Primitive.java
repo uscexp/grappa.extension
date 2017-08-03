@@ -3,12 +3,12 @@
  */
 package com.github.uscexp.grappa.extension.interpreter.type;
 
-import static com.github.uscexp.grappa.extension.interpreter.type.Comperator.EQUALS;
-import static com.github.uscexp.grappa.extension.interpreter.type.Comperator.GREATER;
-import static com.github.uscexp.grappa.extension.interpreter.type.Comperator.GREATER_EQUALS;
-import static com.github.uscexp.grappa.extension.interpreter.type.Comperator.LESSER;
-import static com.github.uscexp.grappa.extension.interpreter.type.Comperator.LESSER_EQUALS;
-import static com.github.uscexp.grappa.extension.interpreter.type.Comperator.NOT_EQUALS;
+import static com.github.uscexp.grappa.extension.interpreter.type.Comparator.EQUALS;
+import static com.github.uscexp.grappa.extension.interpreter.type.Comparator.GREATER;
+import static com.github.uscexp.grappa.extension.interpreter.type.Comparator.GREATER_EQUALS;
+import static com.github.uscexp.grappa.extension.interpreter.type.Comparator.LESSER;
+import static com.github.uscexp.grappa.extension.interpreter.type.Comparator.LESSER_EQUALS;
+import static com.github.uscexp.grappa.extension.interpreter.type.Comparator.NOT_EQUALS;
 import static com.github.uscexp.grappa.extension.interpreter.type.Operator.ADDITION;
 import static com.github.uscexp.grappa.extension.interpreter.type.Operator.BITWISE_AND;
 import static com.github.uscexp.grappa.extension.interpreter.type.Operator.BITWISE_OR;
@@ -222,6 +222,50 @@ public class Primitive {
 		return clazz;
 	}
 
+	public static Class<?> getPrimitiveTypeFromType(String type) {
+		short typeIdx = getType(type);
+		return getPrimitiveTypeFromTypeIdx(typeIdx);
+	}
+
+	public static Class<?> getPrimitiveTypeFromTypeIdx(short type) {
+		Class<?> clazz = null;
+		switch (type) {
+		case BOOLEAN:
+			clazz = Boolean.class;
+			break;
+		case CHARACTER:
+			clazz = Character.class;
+			break;
+		case BYTE:
+			clazz = Byte.class;
+			break;
+		case SHORT:
+			clazz = Short.class;
+			break;
+		case INTEGER:
+			clazz = Integer.class;
+			break;
+		case LONG:
+			clazz = Long.class;
+			break;
+		case FLOAT:
+			clazz = Float.class;
+			break;
+		case DOUBLE:
+			clazz = Double.class;
+			break;
+		case STRING:
+			clazz = String.class;
+			break;
+		case FILE_READER:
+			clazz = BufferedReader.class;
+			break;
+		case FILE_WRITER:
+			clazz = BufferedWriter.class;
+		}
+		return clazz;
+	}
+
 	public static short getType(String type) {
 		short typeIdx = STRING;
 		if (type.equals("boolean")) {
@@ -251,21 +295,21 @@ public class Primitive {
 	}
 
 	private void setTypeId() {
-		if (getPrimitiveType().equals(Boolean.TYPE)) {
+		if (getPrimitiveType().equals(Boolean.TYPE) || getPrimitiveType().equals(Boolean.class)) {
 			this.typeId = BOOLEAN;
-		} else if (getPrimitiveType().equals(Character.TYPE)) {
+		} else if (getPrimitiveType().equals(Character.TYPE) || getPrimitiveType().equals(Character.class)) {
 			this.typeId = CHARACTER;
-		} else if (getPrimitiveType().equals(Byte.TYPE)) {
+		} else if (getPrimitiveType().equals(Byte.TYPE) || getPrimitiveType().equals(Byte.class)) {
 			this.typeId = BYTE;
-		} else if (getPrimitiveType().equals(Short.TYPE)) {
+		} else if (getPrimitiveType().equals(Short.TYPE) || getPrimitiveType().equals(Short.class)) {
 			this.typeId = SHORT;
-		} else if (getPrimitiveType().equals(Integer.TYPE)) {
+		} else if (getPrimitiveType().equals(Integer.TYPE) || getPrimitiveType().equals(Integer.class)) {
 			this.typeId = INTEGER;
-		} else if (getPrimitiveType().equals(Long.TYPE)) {
+		} else if (getPrimitiveType().equals(Long.TYPE) || getPrimitiveType().equals(Long.class)) {
 			this.typeId = LONG;
-		} else if (getPrimitiveType().equals(Float.TYPE)) {
+		} else if (getPrimitiveType().equals(Float.TYPE) || getPrimitiveType().equals(Float.class)) {
 			this.typeId = FLOAT;
-		} else if (getPrimitiveType().equals(Double.TYPE)) {
+		} else if (getPrimitiveType().equals(Double.TYPE) || getPrimitiveType().equals(Double.class)) {
 			this.typeId = DOUBLE;
 		} else if (getPrimitiveType().equals(String.class)) {
 			this.typeId = STRING;
@@ -285,38 +329,70 @@ public class Primitive {
 	}
 
 	public Object getValue() {
-		return this.value;
+		Object primValue = value;
+		switch (this.typeId) {
+		case BOOLEAN:
+			primValue = getBooleanValue();
+			break;
+		case CHARACTER:
+			primValue = getCharacterValue();
+			break;
+		case BYTE:
+			primValue = getByteValue();
+			break;
+		case SHORT:
+			primValue = getShortValue();
+			break;
+		case INTEGER:
+			primValue = getIntegerValue();
+			break;
+		case LONG:
+			primValue = getLongValue();
+			break;
+		case FLOAT:
+			primValue = getFloatValue();
+			break;
+		case DOUBLE:
+			primValue = getDoubleValue();
+			break;
+		case STRING:
+			primValue = value instanceof String ? value : String.valueOf(value);
+			break;
+		default:
+			primValue = value;
+		}
+		return primValue;
 	}
 
 	public boolean getBooleanValue() {
 		boolean primValue = false;
 		switch (this.typeId) {
 		case BOOLEAN:
-			primValue = ((Boolean) getValue()).booleanValue();
+			primValue = ((Boolean) value).booleanValue();
 			break;
 		case CHARACTER:
-			primValue = ((Character) getValue()).charValue() > 0;
+			primValue = ((Character) value).charValue() > 0;
 			break;
 		case BYTE:
-			primValue = ((Byte) getValue()).shortValue() > 0;
+			primValue = ((Byte) value).shortValue() > 0;
 			break;
 		case SHORT:
-			primValue = ((Short) getValue()).shortValue() > 0;
+			primValue = ((Short) value).shortValue() > 0;
 			break;
 		case INTEGER:
-			primValue = ((Integer) getValue()).intValue() > 0;
+			primValue = ((Integer) value).intValue() > 0;
 			break;
 		case LONG:
-			primValue = ((Long) getValue()).longValue() > 0L;
+			primValue = ((Long) value).longValue() > 0L;
 			break;
 		case FLOAT:
-			primValue = ((Float) getValue()).floatValue() > 0.0F;
+			primValue = ((Float) value).floatValue() > 0.0F;
 			break;
 		case DOUBLE:
-			primValue = ((Double) getValue()).doubleValue() > 0.0D;
+			primValue = ((Double) value).doubleValue() > 0.0D;
 			break;
 		case STRING:
-			primValue = new Boolean((String) getValue()).booleanValue();
+			primValue = new Boolean((String) value).booleanValue();
 			break;
 		default:
 			primValue = false;
@@ -331,28 +407,28 @@ public class Primitive {
 			primValue = getBooleanValue() ? '1' : '0';
 			break;
 		case CHARACTER:
-			primValue = ((Character) getValue()).charValue();
+			primValue = ((Character) value).charValue();
 			break;
 		case BYTE:
-			primValue = (char) ((Byte) getValue()).shortValue();
+			primValue = (char) ((Byte) value).shortValue();
 			break;
 		case SHORT:
-			primValue = (char) ((Short) getValue()).shortValue();
+			primValue = (char) ((Short) value).shortValue();
 			break;
 		case INTEGER:
-			primValue = (char) ((Integer) getValue()).intValue();
+			primValue = (char) ((Integer) value).intValue();
 			break;
 		case LONG:
-			primValue = (char) (int) ((Long) getValue()).longValue();
+			primValue = (char) (int) ((Long) value).longValue();
 			break;
 		case STRING:
-			primValue = ((String) getValue()).charAt(0);
+			primValue = ((String) value).charAt(0);
 			break;
 		case FLOAT:
-			primValue = (char) ((Float) getValue()).intValue();
+			primValue = (char) ((Float) value).intValue();
 			break;
 		case DOUBLE:
-			primValue = (char) ((Double) getValue()).intValue();
+			primValue = (char) ((Double) value).intValue();
 			break;
 		default:
 			primValue = ' ';
@@ -364,31 +440,31 @@ public class Primitive {
 		byte primValue = 0;
 		switch (this.typeId) {
 		case BOOLEAN:
-			primValue = ((Boolean) getValue()).booleanValue() ? (byte) 1 : (byte) 0;
+			primValue = ((Boolean) value).booleanValue() ? (byte) 1 : (byte) 0;
 			break;
 		case CHARACTER:
-			primValue = ((Character) getValue()).toString().getBytes()[0];
+			primValue = ((Character) value).toString().getBytes()[0];
 			break;
 		case BYTE:
-			primValue = ((Byte) getValue()).byteValue();
+			primValue = ((Byte) value).byteValue();
 			break;
 		case SHORT:
-			primValue = ((Short) getValue()).byteValue();
+			primValue = ((Short) value).byteValue();
 			break;
 		case INTEGER:
-			primValue = ((Integer) getValue()).byteValue();
+			primValue = ((Integer) value).byteValue();
 			break;
 		case LONG:
-			primValue = ((Long) getValue()).byteValue();
+			primValue = ((Long) value).byteValue();
 			break;
 		case FLOAT:
-			primValue = ((Float) getValue()).byteValue();
+			primValue = ((Float) value).byteValue();
 			break;
 		case DOUBLE:
-			primValue = ((Double) getValue()).byteValue();
+			primValue = ((Double) value).byteValue();
 			break;
 		case STRING:
-			primValue = new Byte((String) getValue()).byteValue();
+			primValue = new Byte((String) value).byteValue();
 			break;
 		default:
 			primValue = 0;
@@ -400,31 +476,31 @@ public class Primitive {
 		short primValue = 0;
 		switch (this.typeId) {
 		case BOOLEAN:
-			primValue = ((Boolean) getValue()).booleanValue() ? (short) 1 : (short) 0;
+			primValue = ((Boolean) value).booleanValue() ? (short) 1 : (short) 0;
 			break;
 		case CHARACTER:
-			primValue = (short) ((Character) getValue()).charValue();
+			primValue = (short) ((Character) value).charValue();
 			break;
 		case BYTE:
-			primValue = ((Byte) getValue()).shortValue();
+			primValue = ((Byte) value).shortValue();
 			break;
 		case SHORT:
-			primValue = ((Short) getValue()).shortValue();
+			primValue = ((Short) value).shortValue();
 			break;
 		case INTEGER:
-			primValue = ((Integer) getValue()).shortValue();
+			primValue = ((Integer) value).shortValue();
 			break;
 		case LONG:
-			primValue = ((Long) getValue()).shortValue();
+			primValue = ((Long) value).shortValue();
 			break;
 		case FLOAT:
-			primValue = ((Float) getValue()).shortValue();
+			primValue = ((Float) value).shortValue();
 			break;
 		case DOUBLE:
-			primValue = ((Double) getValue()).shortValue();
+			primValue = ((Double) value).shortValue();
 			break;
 		case STRING:
-			primValue = new Short((String) getValue()).shortValue();
+			primValue = new Short((String) value).shortValue();
 			break;
 		default:
 			primValue = 0;
@@ -436,31 +512,31 @@ public class Primitive {
 		int primValue = 0;
 		switch (this.typeId) {
 		case BOOLEAN:
-			primValue = ((Boolean) getValue()).booleanValue() ? 1 : 0;
+			primValue = ((Boolean) value).booleanValue() ? 1 : 0;
 			break;
 		case CHARACTER:
-			primValue = ((Character) getValue()).charValue();
+			primValue = ((Character) value).charValue();
 			break;
 		case BYTE:
-			primValue = ((Byte) getValue()).intValue();
+			primValue = ((Byte) value).intValue();
 			break;
 		case SHORT:
-			primValue = ((Short) getValue()).intValue();
+			primValue = ((Short) value).intValue();
 			break;
 		case INTEGER:
-			primValue = ((Integer) getValue()).intValue();
+			primValue = ((Integer) value).intValue();
 			break;
 		case LONG:
-			primValue = ((Long) getValue()).intValue();
+			primValue = ((Long) value).intValue();
 			break;
 		case FLOAT:
-			primValue = ((Float) getValue()).intValue();
+			primValue = ((Float) value).intValue();
 			break;
 		case DOUBLE:
-			primValue = ((Double) getValue()).intValue();
+			primValue = ((Double) value).intValue();
 			break;
 		case STRING:
-			primValue = new Integer((String) getValue()).intValue();
+			primValue = new Integer((String) value).intValue();
 			break;
 		default:
 			primValue = 0;
@@ -472,31 +548,31 @@ public class Primitive {
 		long primValue = 0L;
 		switch (this.typeId) {
 		case BOOLEAN:
-			primValue = ((Boolean) getValue()).booleanValue() ? 1 : 0;
+			primValue = ((Boolean) value).booleanValue() ? 1 : 0;
 			break;
 		case CHARACTER:
-			primValue = ((Character) getValue()).charValue();
+			primValue = ((Character) value).charValue();
 			break;
 		case BYTE:
-			primValue = ((Byte) getValue()).longValue();
+			primValue = ((Byte) value).longValue();
 			break;
 		case SHORT:
-			primValue = ((Short) getValue()).longValue();
+			primValue = ((Short) value).longValue();
 			break;
 		case INTEGER:
-			primValue = ((Integer) getValue()).longValue();
+			primValue = ((Integer) value).longValue();
 			break;
 		case LONG:
-			primValue = ((Long) getValue()).longValue();
+			primValue = ((Long) value).longValue();
 			break;
 		case FLOAT:
-			primValue = ((Float) getValue()).longValue();
+			primValue = ((Float) value).longValue();
 			break;
 		case DOUBLE:
-			primValue = ((Double) getValue()).longValue();
+			primValue = ((Double) value).longValue();
 			break;
 		case STRING:
-			primValue = new Long((String) getValue()).longValue();
+			primValue = new Long((String) value).longValue();
 			break;
 		default:
 			primValue = 0L;
@@ -508,31 +584,31 @@ public class Primitive {
 		float primValue = 0.0F;
 		switch (this.typeId) {
 		case BOOLEAN:
-			primValue = ((Boolean) getValue()).booleanValue() ? 1.0F : 0.0F;
+			primValue = ((Boolean) value).booleanValue() ? 1.0F : 0.0F;
 			break;
 		case CHARACTER:
-			primValue = ((Character) getValue()).charValue();
+			primValue = ((Character) value).charValue();
 			break;
 		case BYTE:
-			primValue = ((Byte) getValue()).floatValue();
+			primValue = ((Byte) value).floatValue();
 			break;
 		case SHORT:
-			primValue = ((Short) getValue()).floatValue();
+			primValue = ((Short) value).floatValue();
 			break;
 		case INTEGER:
-			primValue = ((Integer) getValue()).floatValue();
+			primValue = ((Integer) value).floatValue();
 			break;
 		case LONG:
-			primValue = ((Long) getValue()).floatValue();
+			primValue = ((Long) value).floatValue();
 			break;
 		case FLOAT:
-			primValue = ((Float) getValue()).floatValue();
+			primValue = ((Float) value).floatValue();
 			break;
 		case DOUBLE:
-			primValue = ((Double) getValue()).floatValue();
+			primValue = ((Double) value).floatValue();
 			break;
 		case STRING:
-			primValue = new Float((String) getValue()).floatValue();
+			primValue = new Float((String) value).floatValue();
 			break;
 		default:
 			primValue = 0.0F;
@@ -544,31 +620,31 @@ public class Primitive {
 		double primValue = 0.0D;
 		switch (this.typeId) {
 		case BOOLEAN:
-			primValue = ((Boolean) getValue()).booleanValue() ? 1 : 0;
+			primValue = ((Boolean) value).booleanValue() ? 1 : 0;
 			break;
 		case CHARACTER:
-			primValue = ((Character) getValue()).charValue();
+			primValue = ((Character) value).charValue();
 			break;
 		case BYTE:
-			primValue = ((Byte) getValue()).doubleValue();
+			primValue = ((Byte) value).doubleValue();
 			break;
 		case SHORT:
-			primValue = ((Short) getValue()).doubleValue();
+			primValue = ((Short) value).doubleValue();
 			break;
 		case INTEGER:
-			primValue = ((Integer) getValue()).doubleValue();
+			primValue = ((Integer) value).doubleValue();
 			break;
 		case LONG:
-			primValue = ((Long) getValue()).doubleValue();
+			primValue = ((Long) value).doubleValue();
 			break;
 		case FLOAT:
-			primValue = ((Float) getValue()).doubleValue();
+			primValue = ((Float) value).doubleValue();
 			break;
 		case DOUBLE:
-			primValue = ((Double) getValue()).doubleValue();
+			primValue = ((Double) value).doubleValue();
 			break;
 		case STRING:
-			primValue = new Double((String) getValue()).doubleValue();
+			primValue = new Double((String) value).doubleValue();
 			break;
 		default:
 			primValue = 0.0D;
@@ -656,7 +732,7 @@ public class Primitive {
 			this.value = new Byte(value);
 			break;
 		case SHORT:
-			this.value = new Short((short) value);
+			this.value = new Short(value);
 			break;
 		case INTEGER:
 			this.value = new Integer(value);
@@ -767,7 +843,7 @@ public class Primitive {
 			this.value = new Long(value);
 			break;
 		case FLOAT:
-			this.value = new Float((float) value);
+			this.value = new Float(value);
 			break;
 		case DOUBLE:
 			this.value = new Double(value);
@@ -857,7 +933,7 @@ public class Primitive {
 			this.value = new Character(value.charAt(0));
 			break;
 		case BYTE:
-			this.value = (byte)Integer.parseInt(value);
+			this.value = (byte) Integer.parseInt(value);
 			break;
 		case SHORT:
 			this.value = new Short(value);
@@ -939,22 +1015,22 @@ public class Primitive {
 		case DOUBLE:
 			setValue(primitive.getDoubleValue());
 			break;
-			
+
 		case STRING:
-			setValue((String)primitive.getValue());
+			setValue((String) primitive.getValue());
 			break;
-			
+
 		case FILE_READER:
-			setValue((BufferedReader)primitive.getValue());
+			setValue((BufferedReader) primitive.getValue());
 			break;
-			
+
 		case FILE_WRITER:
-			setValue((BufferedWriter)primitive.getValue());
+			setValue((BufferedWriter) primitive.getValue());
 			break;
-			
-			default:
-				throw new RuntimeException(String.format("%s can't be assigned to %s of type %s",
-						value == null ? "null" : value.getClass().getSimpleName(), getClass().getSimpleName(), getPrimitiveType().getSimpleName()));
+
+		default:
+			throw new RuntimeException(String.format("%s can't be assigned to %s of type %s",
+					value == null ? "null" : value.getClass().getSimpleName(), getClass().getSimpleName(), getPrimitiveType().getSimpleName()));
 		}
 	}
 
@@ -1103,13 +1179,13 @@ public class Primitive {
 	public Primitive equalsObject(Object obj) {
 		return new Primitive(Boolean.TYPE, equals(obj));
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		return compare(EQUALS, obj);
 	}
-	
-	public boolean compare(Comperator comperator, Object obj) {
+
+	public boolean compare(Comparator comperator, Object obj) {
 		Primitive check = getPrimitive(obj);
 		boolean result = false;
 		switch (getTypeId()) {
@@ -1138,14 +1214,14 @@ public class Primitive {
 			result = comperator.apply(getDoubleValue(), check.getDoubleValue());
 			break;
 		case STRING:
-			result = comperator.apply(toString(), (String)check.getValue());
+			result = comperator.apply(String.valueOf(value), String.valueOf(check.getValue()));
 			break;
 		default:
 			throw new RuntimeException(String.format("%s for %s is not allowed!", comperator.toString(), getPrimitiveType()));
 		}
 		return result;
 	}
-	
+
 	public Primitive notEquals(Object obj) {
 		return new Primitive(Boolean.TYPE, compare(NOT_EQUALS, obj));
 	}
@@ -1158,7 +1234,7 @@ public class Primitive {
 		if (!(obj instanceof Primitive)) {
 			obj = new Primitive(obj);
 		}
-		return (Primitive)obj;
+		return (Primitive) obj;
 	}
 
 	public Primitive bitwiseComplement() {
@@ -1223,7 +1299,7 @@ public class Primitive {
 			primitive = new Primitive(operator.apply(getDoubleValue(), check.getDoubleValue()));
 			break;
 		case STRING:
-			primitive = new Primitive(operator.apply((String)getValue(), (String)check.getValue()));
+			primitive = new Primitive(operator.apply((String) value, String.valueOf(check.getValue())));
 			break;
 		default:
 			throw new RuntimeException(String.format("%s for %s is not allowed!", operator.toString(), getPrimitiveType()));
@@ -1273,6 +1349,62 @@ public class Primitive {
 
 	public Primitive add(Object obj) {
 		return calculate(ADDITION, obj);
+	}
+
+	public void positive() {
+		switch (this.typeId) {
+		case CHARACTER:
+			setValue(+((Character) this.value).charValue());
+			break;
+		case BYTE:
+			setValue(+((Byte) this.value).byteValue());
+			break;
+		case SHORT:
+			setValue(+((Short) this.value).shortValue());
+			break;
+		case INTEGER:
+			setValue(+((Integer) this.value).intValue());
+			break;
+		case LONG:
+			setValue(+((Long) this.value).longValue());
+			break;
+		case FLOAT:
+			setValue(+((Float) this.value).floatValue());
+			break;
+		case DOUBLE:
+			setValue(+((Double) this.value).doubleValue());
+			break;
+		default:
+			throw new RuntimeException(String.format("%s for %s is not allowed!", "-", getPrimitiveType()));
+		}
+	}
+
+	public void negative() {
+		switch (this.typeId) {
+		case CHARACTER:
+			setValue(-((Character) this.value).charValue());
+			break;
+		case BYTE:
+			setValue(-((Byte) this.value).byteValue());
+			break;
+		case SHORT:
+			setValue(-((Short) this.value).shortValue());
+			break;
+		case INTEGER:
+			setValue(-((Integer) this.value).intValue());
+			break;
+		case LONG:
+			setValue(-((Long) this.value).longValue());
+			break;
+		case FLOAT:
+			setValue(-((Float) this.value).floatValue());
+			break;
+		case DOUBLE:
+			setValue(-((Double) this.value).doubleValue());
+			break;
+		default:
+			throw new RuntimeException(String.format("%s for %s is not allowed!", "-", getPrimitiveType()));
+		}
 	}
 
 	public void increment() {
