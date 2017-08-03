@@ -1,25 +1,23 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.parser.peg;
 
-import org.parboiled.Node;
+import com.github.uscexp.grappa.extension.util.IStack;
 
 /**
  * Command implementation for the <code>PegParser</code> rule: NOT.
  */
 public class AstNOTTreeNode<V> extends AstPegBaseTreeNode<V> {
-
-	public AstNOTTreeNode(Node<?> node, String value) {
-		super(node, value);
+	public AstNOTTreeNode(String rule, String value) {
+		super(rule, value);
 	}
 
 	@Override
-	protected void interpret(Long id)
-		throws ReflectiveOperationException {
-		super.interpret(id);
-		String param = (String) closeProcessStore.getStack().pop();
-		closeProcessStore.getStack().push("testNot(" + param + ")");
+	protected void interpretAfterChilds(Long id) throws ReflectiveOperationException {
+		super.interpretAfterChilds(id);
+		IStack<Object> stack = this.processStore.getTierStack();
+		String param = (String) stack.pop();
+		stack.push("testNot(" + param + ")");
 	}
-
 }

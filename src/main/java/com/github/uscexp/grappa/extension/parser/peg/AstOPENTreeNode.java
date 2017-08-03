@@ -1,47 +1,40 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.parser.peg;
 
-import org.parboiled.Node;
+import com.github.uscexp.grappa.extension.util.IStack;
 
 /**
  * Command implementation for the <code>PegParser</code> rule: OPEN.
  * 
  */
 public class AstOPENTreeNode<V> extends AstPegBaseTreeNode<V> {
-
-	public AstOPENTreeNode(Node<?> node, String value) {
-		super(node, value);
+	public AstOPENTreeNode(String rule, String value) {
+		super(rule, value);
 	}
 
 	@Override
-	protected void interpret(Long id) throws ReflectiveOperationException {
-		super.interpret(id);
-		String openMethod = (String) openProcessStore.getStack().pop();
-		if(openMethod.equals(")"))
-			openMethod = (String) openProcessStore.getStack().pop();
-		String bodyString = openMethod + "(";
+	protected void interpretAfterChilds(Long id) throws ReflectiveOperationException {
+		super.interpretAfterChilds(id);
+		IStack<Object> stack = this.processStore.getTierStack();
+		String bodyString = "";
 
-		int size = closeProcessStore.getStack().size();
-		for (int i = 0; i < size; i++) {
-			String param = (String) closeProcessStore.getStack().pop();
-			if(param.equals(")")) {
-				break;
+		boolean init = false;
+		while (!stack.isEmpty()) {
+			if (init) {
+				bodyString = bodyString + ", ";
+			} else {
+				init = true;
 			}
-			if (!bodyString.endsWith("(")) {
-				bodyString += ", ";
-			}
-			bodyString += param;
+			bodyString = bodyString + stack.pop();
 		}
-		bodyString += ")";
-		// remove ) from open function stack
-		if(!openProcessStore.getStack().isEmpty() && ((String)openProcessStore.getStack().peek()).equals(")"))
-			openProcessStore.getStack().pop();
-
 		bodyString = checkPostponedAction(bodyString);
-		
-		closeProcessStore.getStack().push(bodyString);
+		this.processStore.tierOneDown(true);
+		this.openProcessStore.tierOneDown(true);
+		if (!bodyString.isEmpty()) {
+			bodyString = checkPostponedAction(bodyString);
+			this.processStore.getTierStack().push(bodyString);
+		}
 	}
-
 }

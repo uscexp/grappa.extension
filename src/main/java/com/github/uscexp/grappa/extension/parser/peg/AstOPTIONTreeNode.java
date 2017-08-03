@@ -1,28 +1,20 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.parser.peg;
-
-import org.parboiled.Node;
 
 /**
  * Command implementation for the <code>PegParser</code> rule: OPTION.
  */
 public class AstOPTIONTreeNode<V> extends AstPegBaseTreeNode<V> {
 
-	public static final String OPTION = "optional";
-	public static final String START_OPTION = "#optional#";
-
-	public AstOPTIONTreeNode(Node<?> node, String value) {
-		super(node, value);
+	public AstOPTIONTreeNode(String rule, String value) {
+		super(rule, value);
 	}
 
 	@Override
-	protected void interpret(Long id)
-		throws ReflectiveOperationException {
-		super.interpret(id);
-		openProcessStore.getStack().push(OPTION);
-		closeProcessStore.getStack().push(START_OPTION);
+	protected void interpretAfterChilds(Long id) throws ReflectiveOperationException {
+		super.interpretAfterChilds(id);
+		this.openProcessStore.getTierStack().push(OPTIONAL);
 	}
-
 }

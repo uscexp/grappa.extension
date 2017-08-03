@@ -1,9 +1,9 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.codegenerator;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -24,18 +24,17 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
 import org.junit.Test;
-import org.parboiled.BaseParser;
-import org.parboiled.Parboiled;
-import org.parboiled.Rule;
-import org.parboiled.errors.ErrorUtils;
-import org.parboiled.parserunners.RecoveringParseRunner;
-import org.parboiled.support.ParsingResult;
 
+import com.github.fge.grappa.Grappa;
+import com.github.fge.grappa.exceptions.InvalidGrammarException;
+import com.github.fge.grappa.parsers.BaseParser;
+import com.github.fge.grappa.rules.Rule;
 import com.github.uscexp.grappa.extension.exception.PegParserGeneratorException;
-import com.github.uscexp.grappa.extension.parser.peg.PegParser;
+import com.github.uscexp.grappa.extension.nodes.AstTreeNode;
+import com.github.uscexp.grappa.extension.parser.Parser;
 
 /**
- * @author  haui
+ * @author haui
  */
 public class PegParserGeneratorTest {
 
@@ -47,14 +46,13 @@ public class PegParserGeneratorTest {
 	private PegParserGenerator pegParserGeneratorSUT = new PegParserGenerator();
 
 	@Test
-	public void testGenerateParserStringStringStringCharset()
-		throws Exception {
+	public void testGenerateParserFromStringFromFileStringStringStringCharset() throws Exception {
 		File rootFile = new File(SOURCE_OUTPUT_PATH);
 		URL url = this.getClass().getClassLoader().getResource(PEG_INPUT_PATH);
 		URLClassLoader classLoader = URLClassLoader.newInstance(new URL[] { rootFile.toURI().toURL() }, getClass().getClassLoader());
 		Thread.currentThread().setContextClassLoader(classLoader);
 
-		pegParserGeneratorSUT.generateParser(TEST_PARSER_CLASS, TEST_GENERIC_TYPE_CLASS, SOURCE_OUTPUT_PATH, url.getFile(), null);
+		pegParserGeneratorSUT.generateParserFromFile(TEST_PARSER_CLASS, TEST_GENERIC_TYPE_CLASS, SOURCE_OUTPUT_PATH, url.getFile(), null);
 
 		String pathname = SOURCE_OUTPUT_PATH + "/" + TEST_PARSER_CLASS.replace('.', '/');
 		File file = new File(pathname + ".java");
@@ -75,13 +73,11 @@ public class PegParserGeneratorTest {
 		// Load and instantiate compiled class.
 		@SuppressWarnings("unchecked")
 		Class<? extends BaseParser<String>> cls = (Class<? extends BaseParser<String>>) Class.forName(TEST_PARSER_CLASS, true, classLoader);
-		
+
 		@SuppressWarnings("rawtypes")
-		BaseParser parser = Parboiled.createParser(cls);
+		BaseParser parser = Grappa.createParser(cls);
 
 		Method method = parser.getClass().getDeclaredMethod("grammar", (Class<?>[]) null);
-
-		RecoveringParseRunner<PegParser> recoveringParseRunner = new RecoveringParseRunner<>((Rule) method.invoke(parser, (Object[]) null));
 
 		String input = null;
 
@@ -92,22 +88,17 @@ public class PegParserGeneratorTest {
 		byte[] encoded = Files.readAllBytes(Paths.get(inputFile.getAbsolutePath()));
 		input = new String(encoded, encoding);
 
-		ParsingResult<PegParser> parsingResult = recoveringParseRunner.run(input);
+		AstTreeNode<String> rootNode = Parser.parseInput(cls, (Rule) method.invoke(parser, (Object[]) null), input, true);
 
-		if (parsingResult.hasErrors()) {
-			throw new PegParserGeneratorException(String.format("PEG definition parse error(s): %s",
-					ErrorUtils.printParseErrors(parsingResult)));
-		}
-		assertFalse(parsingResult.hasErrors());
+		assertNotNull(rootNode);
 		
 		// clean up
 		file.delete();
 		file = new File(pathname + ".class");
 		file.delete();
-		
+
 		int idx = -1;
-		
-		
+
 		while ((idx = pathname.lastIndexOf('/')) != -1) {
 			pathname = pathname.substring(0, idx);
 			file = new File(pathname);
@@ -116,14 +107,12 @@ public class PegParserGeneratorTest {
 	}
 
 	@Test(expected = PegParserGeneratorException.class)
-	public void testGenerateParserFileInputError()
-		throws Exception {
-		pegParserGeneratorSUT.generateParser(TEST_PARSER_CLASS, TEST_GENERIC_TYPE_CLASS, SOURCE_OUTPUT_PATH, "nonexistent", null);
+	public void testGenerateParserFromStringFromFileFileInputError() throws Exception {
+		pegParserGeneratorSUT.generateParserFromFile(TEST_PARSER_CLASS, TEST_GENERIC_TYPE_CLASS, SOURCE_OUTPUT_PATH, "nonexistent", null);
 	}
 
-	@Test(expected = PegParserGeneratorException.class)
-	public void testGenerateParserInputError()
-		throws Exception {
-		pegParserGeneratorSUT.generateParser(TEST_PARSER_CLASS, TEST_GENERIC_TYPE_CLASS, SOURCE_OUTPUT_PATH, "a - bc");
+	@Test(expected = InvalidGrammarException.class)
+	public void testGenerateParserFromStringFromFileInputError() throws Exception {
+		pegParserGeneratorSUT.generateParserFromString(TEST_PARSER_CLASS, TEST_GENERIC_TYPE_CLASS, SOURCE_OUTPUT_PATH, "a - bc");
 	}
 }

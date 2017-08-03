@@ -1,30 +1,21 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.parser.peg;
-
-import org.parboiled.Node;
 
 /**
  * Command implementation for the <code>PegParser</code> rule: OR.
  */
 public class AstORTreeNode<V> extends AstPegBaseTreeNode<V> {
-
-	public static final String FIRST_OF = "firstOf";
-
-	public AstORTreeNode(Node<?> node, String value) {
-		super(node, value);
+	public AstORTreeNode(String rule, String value) {
+		super(rule, value);
 	}
 
 	@Override
-	protected void interpret(Long id)
-		throws ReflectiveOperationException {
-		super.interpret(id);
-		
-		if(openProcessStore.getStack().isEmpty() || !FIRST_OF.equals(openProcessStore.getStack().peek())) {
-			openProcessStore.getStack().push(FIRST_OF);
+	protected void interpretAfterChilds(Long id) throws ReflectiveOperationException {
+		super.interpretAfterChilds(id);
+		if ((this.openProcessStore.getTierStack().isEmpty()) || (!FIRST_OF.equals(this.openProcessStore.getTierStack().peek()))) {
+			this.openProcessStore.getTierStack().push(FIRST_OF);
 		}
-		closeProcessStore.getStack().push(AstSequenceTreeNode.START_SEQUENCE);
 	}
-
 }

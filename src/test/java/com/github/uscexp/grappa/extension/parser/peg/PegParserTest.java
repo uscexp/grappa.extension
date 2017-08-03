@@ -3,15 +3,13 @@
  */
 package com.github.uscexp.grappa.extension.parser.peg;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 import org.junit.Test;
-import org.parboiled.Parboiled;
-import org.parboiled.errors.ErrorUtils;
-import org.parboiled.parserunners.RecoveringParseRunner;
-import org.parboiled.support.ParsingResult;
 
-import com.github.uscexp.grappa.extension.parser.peg.PegParser;
+import com.github.fge.grappa.Grappa;
+import com.github.uscexp.grappa.extension.nodes.AstTreeNode;
+import com.github.uscexp.grappa.extension.parser.Parser;
 
 
 /**
@@ -27,16 +25,11 @@ public class PegParserTest {
 				"A <- a A? b\n" + 
 				"B <- b B? c";
 
-		PegParser parser = Parboiled.createParser(PegParser.class);
-		RecoveringParseRunner<PegParser> recoveringParseRunner = new RecoveringParseRunner<>(parser.grammar());
+		PegParser parser = Grappa.createParser(PegParser.class);
+		AstTreeNode<String> rootNode = Parser.parseInput(PegParser.class, parser.grammar(), input);
 		
-		ParsingResult<PegParser> parsingResult = recoveringParseRunner.run(input);
-		
-		if(parsingResult.hasErrors()) {
-			System.err.println(String.format("Input parse error(s): %s", ErrorUtils.printParseErrors(parsingResult)));
-		}
-		
-		assertFalse(parsingResult.hasErrors());
-		
+		assertNotNull(rootNode);
+
+		System.out.println("Root node text: " + rootNode.getValue());
 	}
 }

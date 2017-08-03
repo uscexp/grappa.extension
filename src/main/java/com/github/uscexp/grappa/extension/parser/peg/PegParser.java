@@ -1,21 +1,17 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.parser.peg;
 
-import org.parboiled.BaseParser;
-import org.parboiled.Rule;
-import org.parboiled.annotations.BuildParseTree;
-
+import com.github.fge.grappa.parsers.BaseParser;
+import com.github.fge.grappa.rules.Rule;
 import com.github.uscexp.grappa.extension.annotations.AstCommand;
 
 /**
  * @author  haui
  */
-@BuildParseTree
 public class PegParser extends BaseParser<String> {
 
-	@AstCommand
 	public Rule grammar() {
 		return sequence(S(), oneOrMore(definition()), EOI);
 	}
@@ -34,7 +30,6 @@ public class PegParser extends BaseParser<String> {
 		return oneOrMore(prefix());
 	}
 
-	@AstCommand
 	public Rule zerooOrMore() {
 		return zeroOrMore(sequence(OR(), sequence()));
 	}
@@ -159,12 +154,10 @@ public class PegParser extends BaseParser<String> {
 		return sequence(ch(')'), S());
 	}
 
-	@AstCommand
 	public Rule SQUAREOPEN() {
 		return ch('[');
 	}
 
-	@AstCommand
 	public Rule SQUARECLOSE() {
 		return ch(']');
 	}
