@@ -12,14 +12,14 @@ import static org.junit.Assert.assertTrue;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.github.uscexp.grappa.extension.nodes.AstNopTreeNode;
-import com.github.uscexp.grappa.extension.nodes.AstTreeNode;
+import com.github.uscexp.grappa.extension.interpreter.type.MethodDeclaration;
+import com.github.uscexp.grappa.extension.interpreter.type.MethodSignature;
+import com.github.uscexp.grappa.extension.util.IStack;
 
 /**
  * @author haui
@@ -29,6 +29,22 @@ public class ProcessStoreTest {
 
 	private ProcessStore<Object> processStoreSUT;
 	
+	private final MethodSignature methodSignature = new MethodSignature() {
+		
+		@Override
+		public String getName() {
+			return "testMethod";
+		}
+	};
+			
+	private final MethodDeclaration methodDeclaration = new MethodDeclaration() {
+		
+		@Override
+		public MethodSignature getMethodSignature() {
+			return methodSignature;
+		}
+	};
+
 	@Before
 	public void setup() {
 		processStoreSUT = ProcessStore.getInstance(1L);
@@ -86,7 +102,7 @@ public class ProcessStoreTest {
 
 	@Test
 	public void testGetStack() throws Exception {
-		Stack<Object> stack = processStoreSUT.getStack();
+		IStack<Object> stack = processStoreSUT.getStack();
 		
 		assertNotNull(stack);
 	}
@@ -303,39 +319,56 @@ public class ProcessStoreTest {
 
 	@Test
 	public void testGetMethod() throws Exception {
-		AstNopTreeNode<Object> astNopTreeNode = new AstNopTreeNode<>(null, null);
-		String method = "testMethod";
-		processStoreSUT.addMethod(method, astNopTreeNode);
 		
-		AstTreeNode<Object> result = processStoreSUT.getMethod(method);
+		processStoreSUT.addMethod(methodSignature, methodDeclaration);
 		
-		assertEquals(astNopTreeNode, result);
+		MethodDeclaration result = processStoreSUT.getMethod(methodSignature);
+		
+		assertEquals(methodDeclaration, result);
 	}
 
 	@Test
 	public void testRemoveMethod() throws Exception {
-		AstNopTreeNode<Object> astNopTreeNode = new AstNopTreeNode<>(null, null);
-		String method = "testMethod";
-		processStoreSUT.addMethod(method, astNopTreeNode);
+		processStoreSUT.addMethod(methodSignature, methodDeclaration);
 		
-		processStoreSUT.removeMethod(method);
+		processStoreSUT.removeMethod(methodSignature);
 		
-		AstTreeNode<Object> result = processStoreSUT.getMethod(method);
+		MethodDeclaration result = processStoreSUT.getMethod(methodSignature);
 		
 		assertNull(result);
 	}
 
 	@Test
 	public void testClearMethods() throws Exception {
-		AstNopTreeNode<Object> astNopTreeNode = new AstNopTreeNode<>(null, null);
-		String method = "testMethod";
-		processStoreSUT.addMethod(method, astNopTreeNode);
+		processStoreSUT.addMethod(methodSignature, methodDeclaration);
 		
 		processStoreSUT.clearMethods();
 		
-		AstTreeNode<Object> result = processStoreSUT.getMethod(method);
+		MethodDeclaration result = processStoreSUT.getMethod(methodSignature);
 		
 		assertNull(result);
 	}
 
+	@Test
+	public void testRemoveTierStack() throws Exception {
+		IStack<Object> stack = processStoreSUT.tierOneUp(true);
+		
+		assertNotNull(stack);
+		
+		IStack<Object> tierStack = processStoreSUT.getTierStack();
+		
+		assertEquals(stack, tierStack);
+		
+		IStack<Object> tierOneDown = processStoreSUT.tierOneDown(false);
+		
+		assertEquals(stack, tierOneDown);
+		
+		IStack<Object> removeTierStack = processStoreSUT.tierOneDown(true);
+		
+		assertEquals(stack, removeTierStack);
+		
+		IStack<Object> tierStack2 = processStoreSUT.getTierStack();
+		
+		assertNull(tierStack2);
+	}
 }

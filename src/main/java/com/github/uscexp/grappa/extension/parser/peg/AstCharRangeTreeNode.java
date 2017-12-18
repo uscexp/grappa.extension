@@ -1,33 +1,34 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.parser.peg;
 
-import org.parboiled.Node;
+import com.github.uscexp.grappa.extension.util.IStack;
 
 /**
  * Command implementation for the <code>PegParser</code> rule: charRange.
  */
 public class AstCharRangeTreeNode<V> extends AstPegBaseTreeNode<V> {
-
-	public AstCharRangeTreeNode(Node<?> node, String value) {
-		super(node, value);
+	public AstCharRangeTreeNode(String rule, String value) {
+		super(rule, value);
 	}
 
 	@Override
-	protected void interpret(Long id)
-		throws ReflectiveOperationException {
-		super.interpret(id);
-		String rangeStart = (String) closeProcessStore.getStack().pop();
-		String rangeEnd = (String) closeProcessStore.getStack().peek();
-		if(rangeEnd.startsWith("ch('") && value.length() > 1) {
-			rangeStart = rangeStart.substring(3, rangeStart.length()-1);
-			rangeEnd = rangeEnd.substring(3, rangeEnd.length()-1);
-			closeProcessStore.getStack().pop();
-			closeProcessStore.getStack().push("charRange(" + rangeStart + ", " + rangeEnd + ")");
+	protected void interpretAfterChilds(Long id) throws ReflectiveOperationException {
+		super.interpretAfterChilds(id);
+		IStack<Object> stack = this.processStore.getTierStack();
+		String rangeStart = (String) stack.pop();
+		String rangeEnd = "";
+		if (!stack.isEmpty()) {
+			rangeEnd = (String) stack.peek();
+		}
+		if ((rangeEnd.startsWith("ch('")) && (this.value.length() > 1)) {
+			rangeStart = rangeStart.substring(3, rangeStart.length() - 1);
+			rangeEnd = rangeEnd.substring(3, rangeEnd.length() - 1);
+			stack.pop();
+			stack.push("charRange(" + rangeStart + ", " + rangeEnd + ")");
 		} else {
-			closeProcessStore.getStack().push(rangeStart);
+			stack.push(rangeStart);
 		}
 	}
-
 }

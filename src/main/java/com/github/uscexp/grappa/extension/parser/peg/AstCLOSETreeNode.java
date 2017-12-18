@@ -1,27 +1,23 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.parser.peg;
-
-import org.parboiled.Node;
 
 /**
  * Command implementation for the <code>PegParser</code> rule: CLOSE.
  */
 public class AstCLOSETreeNode<V> extends AstPegBaseTreeNode<V> {
-
 	public static final String CLOSE = ")";
 
-	public AstCLOSETreeNode(Node<?> node, String value) {
-		super(node, value);
+	public AstCLOSETreeNode(String rule, String value) {
+		super(rule, value);
 	}
 
 	@Override
-	protected void interpret(Long id)
-		throws ReflectiveOperationException {
-		super.interpret(id);
-		closeProcessStore.getStack().push(CLOSE);
-		openProcessStore.getStack().push(CLOSE);
-	}
+	protected void interpretAfterChilds(Long id) throws ReflectiveOperationException {
+		super.interpretAfterChilds(id);
 
+		this.processStore.tierOneUp(true);
+		this.openProcessStore.tierOneUp(true);
+	}
 }

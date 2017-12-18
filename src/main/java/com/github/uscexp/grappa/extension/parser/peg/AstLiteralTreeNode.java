@@ -1,47 +1,47 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.parser.peg;
 
-import org.parboiled.Node;
+import com.github.uscexp.grappa.extension.util.IStack;
 
 /**
  * Command implementation for the <code>PegParser</code> rule: literal.
  */
 public class AstLiteralTreeNode<V> extends AstPegBaseTreeNode<V> {
-
-	public AstLiteralTreeNode(Node<?> node, String value) {
-		super(node, value);
+	public AstLiteralTreeNode(String rule, String value) {
+		super(rule, value);
 	}
 
 	@Override
-	protected void interpret(Long id)
-		throws ReflectiveOperationException {
-		super.interpret(id);
-		if ((value != null) & !value.isEmpty()) {
-			char quote = value.charAt(0);
-			int idx = value.lastIndexOf(quote);
-			String compareValue = value.substring(1, idx);
-			if(!closeProcessStore.getStack().isEmpty()) {
-				String character = (String) closeProcessStore.getStack().peek();
+	protected void interpretAfterChilds(Long id) throws ReflectiveOperationException {
+		super.interpretAfterChilds(id);
+		IStack<Object> stack = this.processStore.getTierStack();
+		String item = "";
+		if ((this.value != null) && (!this.value.isEmpty())) {
+			char quote = this.value.charAt(0);
+			int idx = this.value.lastIndexOf(quote);
+			String compareValue = this.value.substring(1, idx);
+			if (!stack.isEmpty()) {
+				String character = (String) stack.peek();
 				character = character.substring(4, character.length() - 2);
-				
-				if(character.indexOf(compareValue) == -1) {
-					String chars = (String) closeProcessStore.getStack().pop();
+				if (character.indexOf(compareValue) == -1) {
+					String chars = (String) stack.pop();
 					chars = chars.substring(4, chars.length() - 2);
-					
-					while (!closeProcessStore.getStack().isEmpty()) {
-						character = (String) closeProcessStore.getStack().pop();
+					while (!stack.isEmpty()) {
+						character = (String) stack.pop();
 						character = character.substring(4, character.length() - 2);
-						chars += character;
-						if(chars.indexOf(compareValue) != -1) {
-							closeProcessStore.getStack().push("string(\"" + compareValue + "\")");
+						chars = chars + character;
+						if (chars.indexOf(compareValue) != -1) {
+							item = "string(\"" + compareValue + "\")";
 							break;
 						}
 					}
 				}
 			}
 		}
+		if (!item.isEmpty()) {
+			stack.push(item);
+		}
 	}
-
 }

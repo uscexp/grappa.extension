@@ -1,9 +1,7 @@
 /*
- * Copyright (C) 2014 by haui - all rights reserved
+ * Copyright (C) 2014 - 2016 by haui - all rights reserved
  */
 package com.github.uscexp.grappa.extension.nodes;
-
-import org.parboiled.Node;
 
 /**
  * {@link AstTreeNode} for parser rules without interpreter annotation.
@@ -14,12 +12,16 @@ import org.parboiled.Node;
  */
 public class AstNopTreeNode<V> extends AstTreeNode<V> {
 
-	public AstNopTreeNode(Node<?> node, String value) {
-		super(node, value);
+	public AstNopTreeNode(String rule, String value) {
+		super(rule, value);
 	}
 
 	@Override
-	protected void interpret(Long id) throws ReflectiveOperationException {
+	protected void interpretBeforeChilds(Long id) throws Exception {
+	}
+
+	@Override
+	protected void interpretAfterChilds(Long id) throws Exception {
 	}
 
 }
