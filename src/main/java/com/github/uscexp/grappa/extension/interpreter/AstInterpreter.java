@@ -21,12 +21,12 @@ import com.github.uscexp.grappa.extension.util.AstTreeUtil;
  * {@link String}, if one wants to change that, one has to define the
  * corresponding parameters of the {@link AstValue} annotation.
  * {@link AstCommand} must be implemented from a developer, which has to create
- * the Ast'Name'TreeNode and implement it. This represents the logic of your
- * language commands. The {@link AstCommand} classes by default are located in
- * the same package as the parser implementation and have the naming convetion
- * of Ast + name of your parser rule (first char upper case) + TreeNode. If one
- * want to change that, one has to define the corresponding parameters of the
- * {@link AstCommand} annotation.
+ * the Ast{@literal <}Name{@literal >}TreeNode and implement it. This represents
+ * the logic of your language commands. The {@link AstCommand} classes by
+ * default are located in the same package as the parser implementation and have
+ * the naming convetion of Ast + name of your parser rule (first char upper
+ * case) + TreeNode. If one want to change that, one has to define the
+ * corresponding parameters of the {@link AstCommand} annotation.
  *
  * @author haui
  */
